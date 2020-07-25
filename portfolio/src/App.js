@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
-
 import './App.css';
+
+import Footer from './components/Footer'
 
 class App extends React.Component {
   constructor(props) {
@@ -49,6 +50,8 @@ class App extends React.Component {
               </Nav>
             </Navbar.Collapse>
           </Navbar>
+
+          <Footer />
 
         </Container>
       </Router>
