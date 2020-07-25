@@ -23,17 +23,17 @@ class App extends React.Component {
       home: {
         title: "Titre 1",
         subTitle: "Sous titre 1",
-        text: "Texte 1"
+        text: "Text 1"
       },
       about: {
         title: "Titre 2",
         subTitle: "Sous titre 2",
-        text: "Texte 2"
+        text: "Text 2"
       },
       contact: {
         title: "Titre 3",
         subTitle: "Sous titre 3",
-        text: "Texte 3"
+        text: "Text 3"
       }
     }
   }
