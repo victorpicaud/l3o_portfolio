@@ -1,32 +1,59 @@
 import React from 'react';
-import logo from './logo.svg';
-// Import the BrowserRouter, Route and Link components
-import { BrowserRouter, Route, Link } from 'react-router-dom';
-import Projects from './Projects.js';
-import Cv from './Cv.js';
-import Contact from './Contact.js';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import Container from 'react-bootstrap/Container';
+import Navbar from 'react-bootstrap/Navbar';
+import Nav from 'react-bootstrap/Nav';
+
 import './App.css';
 
-function App() {
-  return (
-    <BrowserRouter>
-      <div className="App">
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      title: "Leo Lemberger",
+      headerLinks: [
+        { title: "Home", path: '/' },
+        { title: "About", path: '/about' },
+        { title: "Contact", path: '/contact' },
+      ],
+      home: {
+        title: "Titre 1",
+        subTitle: "Sous titre 1",
+        text: "Texte 1"
+      },
+      about: {
+        title: "Titre 2",
+        subTitle: "Sous titre 2",
+        text: "Texte 2"
+      },
+      contact: {
+        title: "Titre 3",
+        subTitle: "Sous titre 3",
+        text: "Texte 3"
+      }
+    }
+  }
+  render() {
+    return (
+      <Router>
+        <Container className="p-0" fluid={true}>
 
-        <Route exact path="/" component={Projects} />
-        <Route path="/cv" component={Cv} />
-        <Route path="/contact" component={Contact} />
+          <Navbar className="border-bottom" bg="transparent" expand="lg">
+            <Navbar.Brand>Leo Lemberger</Navbar.Brand>
+            <Navbar.Toggle className="border-0" aria-controls="navbar-toggle" />
+            <Navbar.Collapse id="navbar-toggle" >
+              <Nav className="ml-auto">
+                <Link className="nav-link" to="/">Home</Link>
+                <Link className="nav-link" to="/about">About</Link>
+                <Link className="nav-link" to="/contact">Contact</Link>
+              </Nav>
+            </Navbar.Collapse>
+          </Navbar>
 
-        <div className="navigation">
-          <div className="navigation-sub">
-            <Link to="/" className="item">Projects</Link>
-            <Link to="/cv" className="item">Cv</Link>
-            <Link to="/contact" className="item">Contact</Link>
-
-          </div>
-        </div>
-      </div>
-    </BrowserRouter>
-  );
+        </Container>
+      </Router>
+    );
+  }
 }
 
 export default App;
