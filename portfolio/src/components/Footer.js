@@ -14,7 +14,7 @@ function Footer() {
             </Col>
 
             <Col className="p-0 d-flex justify-content-end">
-              Footer LOl
+              Footer text
             </Col>
         </Row>
       </Container>
