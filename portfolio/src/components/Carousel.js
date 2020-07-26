@@ -1,8 +1,11 @@
 import React from 'react';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
 
-import ris1 from '../assets/images/ris1.jpg'
-import ris2 from '../assets/images/ris2.jpg'
-import ris3 from '../assets/images/ris3.png'
+import Card from './Card';
+import ris1 from '../assets/images/ris1.jpg';
+import ris2 from '../assets/images/ris2.jpg';
+import ris3 from '../assets/images/ris3.png';
 
 class Carousel extends React.Component {
 
@@ -45,7 +48,7 @@ class Carousel extends React.Component {
     items[id].selected = items[id].selected ? false : true;
 
     items.forEach( item => {
-      if(item.id != id) {
+      if(item.id !== id) {
         item.selected = false;
       }
     });
@@ -57,7 +60,7 @@ class Carousel extends React.Component {
 
   makeItems = (items) => {
     return items.map(item => {
-      return <Card item={item} onClick={(e => this.handleCardClick(item.id, e))} key={item.id} />
+      return <Card item={item} click={(e => this.handleCardClick(item.id, e))} key={item.id} />
     });
   }
 
@@ -65,7 +68,11 @@ class Carousel extends React.Component {
 
   render() {
     return(
-      <p>Carousel Works!!</p>
+      <Container fluid={true}>
+        <Row className="justify-content-around">
+          {this.makeItems(this.state.items)}
+        </Row>
+      </Container>
     );
   }
 }
