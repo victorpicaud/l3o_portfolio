@@ -7,7 +7,7 @@ function Content(props) {
   return(
     <Container fluid={true}>
       <Row className="justify-content-center">
-        <Col md={6}>
+        <Col md={6} sm={6}>
           {props.children}
         </Col>
       </Row>

@@ -21,7 +21,7 @@ class App extends React.Component {
         { title: "Contact", path: '/contact' },
       ],
       home: {
-        title: "Titre 1",
+        title: "Titre 1 Issoulachanckl",
         subTitle: "Sous titre 1",
         text: "Text 1"
       },

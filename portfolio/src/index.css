@@ -48,3 +48,7 @@ code {
   color: #FF2600;
   padding: 10px 15px;
 }
+
+:focus {
+    outline: none;
+}
