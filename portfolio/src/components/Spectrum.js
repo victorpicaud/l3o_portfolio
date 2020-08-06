@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import * as THREE from "three";
 import { Interaction } from 'three.interaction';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import CameraControls from 'camera-controls';
+import TWEEN from '@tweenjs/tween.js';
+
+CameraControls.install( { THREE: THREE } );
 
 class Spectrum extends Component {
 
@@ -28,14 +31,43 @@ class Spectrum extends Component {
   }
 
   handleMeshClick = ( event ) => {
-    console.log(event.target.position);
-    console.log(this.camera);
-    this.controls.autoRotateSpeed = -(this.controls.autoRotateSpeed + 2);
+    let tangle = THREE.Math.radToDeg(parseFloat(event.data.target.name) % 360);
+    let cangle = THREE.Math.radToDeg(this.controls.azimuthAngle) - 90 % 360;
+    console.log(tangle, cangle);
+    console.log(tangle -  cangle);
+    this.controls.damplingFactor = 0;
+    this.controls.rotateTo(THREE.Math.degToRad(90 + tangle - cangle), 0, true);
+    this.controls.damplingFactor = 0.05;
+  }
+
+  handleFocus = ( event ) => {
+    var target = new THREE.Vector3(1.5, 1.5, 1.5);
+    var current = event.data.target.scale;
+    this.tweend = new TWEEN.Tween(current).to(target, 1000);
+    this.tweend.onUpdate(function() {
+      event.data.target.scale.set(current.x, current.y, current.z);
+    });
+    this.tweend.easing(TWEEN.Easing.Bounce.In);
+    this.tweend.start();
+  }
+
+  scaleDownMesh = ( event ) => {
+    var target = new THREE.Vector3(1, 1, 1);
+    var current = event.data.target.scale;
+    this.tweend = new TWEEN.Tween(current).to(target, 1000);
+    this.tweend.onUpdate(function() {
+      event.data.target.scale.set(current.x, current.y, current.z);
+    });
+    this.tweend.easing(TWEEN.Easing.Bounce.Out);
+    this.tweend.start();
   }
 
   componentDidMount(){
     this.objects = [];
+    this.camtween = null;
+    this.tweend = null;
 
+    this.clock = new THREE.Clock();
     this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
     this.camera.position.set( 0, 3, 7 );
 
@@ -54,9 +86,12 @@ class Spectrum extends Component {
 
       const t = i / count * 2 * Math.PI;
 
+      mesh.name = t;
       mesh.position.x = Math.cos( t ) * 4;
       mesh.position.z = Math.sin( t ) * 4;
       mesh.on('click', this.handleMeshClick);
+      mesh.on('mouseover', this.handleFocus);
+      mesh.on('mouseout', this.scaleDownMesh);
       this.scene.add( mesh );
       this.objects.push( mesh );
 
@@ -68,14 +103,17 @@ class Spectrum extends Component {
 
     const interaction = new Interaction(this.renderer, this.scene, this.camera);
 
-    this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+    this.controls = new CameraControls( this.camera, this.renderer.domElement );
     this.controls.enableDamping = true;
-    this.controls.enableZoom = false;
+    this.controls.dollyToCursor = false;
+    this.controls.dollySpeed = 0;
     this.controls.maxPolarAngle = Math.PI/2;
     this.controls.minPolarAngle = Math.PI/4 + Math.PI/8;
     this.controls.rotateSpeed = 0.5;
-    this.controls.autoRotate = true;
+    this.controls.autoRotate = false;
     this.controls.autoRotateSpeed = -2.0;
+    this.controls.enableKeys = false;
+
     this.start();
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
@@ -100,8 +138,9 @@ class Spectrum extends Component {
       object.rotation.z += 0.005;
       object.rotation.x += 0.002;
     }
-    this.controls.update();
-
+    const delta = this.clock.getDelta();
+    const hasControlsUpdated = this.controls.update( delta );
+    TWEEN.update();
     this.renderer.render( this.scene, this.camera );
    }
 
