@@ -17,6 +17,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "react-spring": "^8.0.27",
+    "simplex-noise": "^2.4.0",
     "three": "^0.119.0",
     "three.interaction": "^0.2.3",
     "three.proton.js": "^0.2.3",
