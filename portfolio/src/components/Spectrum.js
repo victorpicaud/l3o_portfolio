@@ -5,6 +5,7 @@ import CameraControls from 'camera-controls';
 import TWEEN from '@tweenjs/tween.js';
 import REZZ from '../assets/sounds/rezz-edge.mp3';
 import SimplexNoise from 'simplex-noise';
+import Dat from 'dat.gui';
 
 CameraControls.install( { THREE: THREE } );
 
@@ -64,7 +65,7 @@ class Spectrum extends Component {
   makeRoughBall = (mesh, bassFr, treFr, reset) => {
     mesh.geometry.vertices.forEach((vertex, i) => {
         var offset = 0.5;
-        var amp = 1;
+        var amp = this.amp;
         var time = window.performance.now();
         vertex.normalize();
         var rf = 0.00001;
@@ -101,8 +102,6 @@ class Spectrum extends Component {
         this.sound.play();
       }
     }
-
-    event.target.off('click', this.handleMeshClick);
   }
 
   handleFocus = ( event ) => {
@@ -128,6 +127,9 @@ class Spectrum extends Component {
   }
 
   componentDidMount(){
+    this.amp = 1;
+    var gui = new Dat.GUI();
+    gui.add(this, 'amp', 0, 10, 0.1);
     this.noise = new SimplexNoise();
     this.previd = null;
     this.objects = [];
