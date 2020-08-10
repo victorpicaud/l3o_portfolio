@@ -34,11 +34,20 @@ class Spectrum extends Component {
   avg = (arr) => {
     var total = arr.reduce(function(sum, b) { return sum + b; });
     return (total / arr.length);
- }
+  }
 
   max = (arr) => {
     return arr.reduce(function(a, b){ return Math.max(a, b); })
+  }
+
+  decaymod = (cangle, tangle) => {
+    let i = 0;
+
+    while (tangle - cangle + 360 * i < 0) {
+      i++;
     }
+    return(i * 360);
+  }
 
   handleResize = () => {
     const width = this.mount.clientWidth;
@@ -52,7 +61,7 @@ class Spectrum extends Component {
     this.renderer.setSize(width, height, false);
   }
 
-  makeRoughBall = (mesh, bassFr, treFr) => {
+  makeRoughBall = (mesh, bassFr, treFr, reset) => {
     mesh.geometry.vertices.forEach((vertex, i) => {
         var offset = 0.5;
         var amp = 1;
@@ -60,7 +69,11 @@ class Spectrum extends Component {
         vertex.normalize();
         var rf = 0.00001;
         var distance = (offset + bassFr ) + this.noise.noise3D(vertex.x + time *rf*7, vertex.y +  time*rf*8, vertex.z + time*rf*9) * amp * treFr;
-        vertex.multiplyScalar(distance/200);
+        if (reset) {
+          vertex.multiplyScalar(1);
+        } else {
+          vertex.multiplyScalar(distance/100);
+        }
     });
     mesh.geometry.verticesNeedUpdate = true;
     mesh.geometry.normalsNeedUpdate = true;
@@ -69,18 +82,27 @@ class Spectrum extends Component {
   }
 
   handleMeshClick = ( event ) => {
-    let tangle = THREE.Math.radToDeg(parseFloat(event.data.target.name) % 360);
-    let cangle = THREE.Math.radToDeg(this.controls.azimuthAngle) % 360;
-    console.log(90 - tangle);
+    let tangle = 90 - THREE.Math.radToDeg(parseFloat(event.data.target.name) % 360);
+    let cangle = THREE.Math.radToDeg(this.controls.azimuthAngle);
+
     this.controls.damplingFactor = 0;
-    let decay = Math.min(90 - tangle, 90 + tangle);
-    this.controls.rotateTo(THREE.Math.degToRad(decay), 0, true);
-    this.controls.damplingFactor = 0.05;
-    if (this.sound.isPlaying) {
-      this.sound.stop();
-    } else {
-      this.sound.play();
+    let modular = this.decaymod(cangle, tangle);
+    if ((event.data.originalEvent.clientX/ window.innerWidth) * 2 - 1 < -0.21) {
+      modular = modular - 360;
     }
+    this.previd = event.target.id
+    let decay = (tangle);
+    this.controls.rotateTo(THREE.Math.degToRad(decay + modular), 0, true);
+    this.controls.damplingFactor = 0.05;
+    if (this.objects[0].id === event.target.id) {
+      if (this.sound.isPlaying) {
+        this.sound.stop();
+      } else {
+        this.sound.play();
+      }
+    }
+
+    event.target.off('click', this.handleMeshClick);
   }
 
   handleFocus = ( event ) => {
@@ -107,12 +129,13 @@ class Spectrum extends Component {
 
   componentDidMount(){
     this.noise = new SimplexNoise();
+    this.previd = null;
     this.objects = [];
     this.camtween = null;
     this.tweend = null;
 
     this.clock = new THREE.Clock();
-    this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
+    this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.01, 20 );
     this.camera.position.set( 0, 3, 7 );
 
     this.scene = new THREE.Scene();
@@ -137,9 +160,9 @@ class Spectrum extends Component {
     this.analyser = new THREE.AudioAnalyser( this.sound, 32 );
     this.analyser.fftSize = 512;
 
-    const geometry = new THREE.IcosahedronGeometry(0.5, 4);
+    this.geometry = new THREE.IcosahedronGeometry(1, 3);
     const material = new THREE.MeshLambertMaterial({
-        color: 0xff00ee,
+        color: 0x0433FF,
         wireframe: true
     });
 
@@ -147,7 +170,7 @@ class Spectrum extends Component {
 
     for ( let i = 0; i < count; i ++ ) {
 
-      const mesh = new THREE.Mesh( geometry.clone(), material );
+      const mesh = new THREE.Mesh( this.geometry.clone(), material );
 
       const t = i / count * 2 * Math.PI;
 
@@ -216,9 +239,9 @@ class Spectrum extends Component {
       var upperMaxFr = upperMax / upperHalfArray.length;
       var upperAvgFr = upperAvg / upperHalfArray.length;
 
-      this.makeRoughBall(this.objects[0], this.modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0, 8), this.modulate(upperAvgFr, 0, 1, 0, 4));
+      this.makeRoughBall(this.objects[0], this.modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0, 8), this.modulate(upperAvgFr, 0, 1, 0, 4), false);
     } else {
-      this.objects[0].geometry = new THREE.IcosahedronGeometry(0.5, 4);
+      this.makeRoughBall(this.objects[0], 0, 0, true);
     }
     window.requestAnimationFrame( this.animate );
 
@@ -231,7 +254,7 @@ class Spectrum extends Component {
   render () {
     return(
         <div
-          style={{width: 800, height: "600px"}}
+          style={{width: "100%", height: "500px"}}
           ref={(mount) => { this.mount = mount }}
           />
     );

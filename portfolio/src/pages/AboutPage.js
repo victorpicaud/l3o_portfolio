@@ -2,6 +2,7 @@ import React from 'react';
 
 import Hero from '../components/Hero';
 import Content from '../components/Content';
+import Spectrum from '../components/Spectrum';
 
 function AboutPage(props) {
 
@@ -10,10 +11,7 @@ function AboutPage(props) {
     <div>
       <Hero title={props.title} subTitle={props.subTitle}/>
 
-      <Content>
-        About Leo Lemberger here
-        Tell us about ya!!!!!
-      </Content>
+      <Spectrum />
      </div>
   );
 }
