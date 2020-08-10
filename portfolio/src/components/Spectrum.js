@@ -68,7 +68,7 @@ class Spectrum extends Component {
         var amp = this.amp;
         var time = window.performance.now();
         vertex.normalize();
-        var rf = 0.00001;
+        var rf = this.rf;
         var distance = (offset + bassFr ) + this.noise.noise3D(vertex.x + time *rf*7, vertex.y +  time*rf*8, vertex.z + time*rf*9) * amp * treFr;
         if (reset) {
           vertex.multiplyScalar(1);
@@ -127,9 +127,13 @@ class Spectrum extends Component {
   }
 
   componentDidMount(){
+    this.fft = 512;
     this.amp = 1;
+    this.rf = 0.00001;
     var gui = new Dat.GUI();
     gui.add(this, 'amp', 0, 10, 0.1);
+    gui.add(this, 'fft', 0, 1000, 1);
+    gui.add(this, 'rf', 0, 0.0001, 0.000001);
     this.noise = new SimplexNoise();
     this.previd = null;
     this.objects = [];
@@ -160,7 +164,7 @@ class Spectrum extends Component {
             });
 
     this.analyser = new THREE.AudioAnalyser( this.sound, 32 );
-    this.analyser.fftSize = 512;
+
 
     this.geometry = new THREE.IcosahedronGeometry(1, 3);
     const material = new THREE.MeshLambertMaterial({
@@ -224,6 +228,7 @@ class Spectrum extends Component {
       cancelAnimationFrame(this.frameId)
     }
   animate = () => {
+    this.analyser.fftSize = this.fft;
     if (this.sound.isPlaying) {
       let dataArray = this.analyser.getFrequencyData();
 
