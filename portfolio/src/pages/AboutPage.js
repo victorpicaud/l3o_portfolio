@@ -2,7 +2,7 @@ import React from 'react';
 
 import Hero from '../components/Hero';
 import Content from '../components/Content';
-import Spectrum from '../components/Spectrum';
+import Video from '../components/Video';
 
 function AboutPage(props) {
 
@@ -11,7 +11,7 @@ function AboutPage(props) {
     <div>
       <Hero title={props.title} subTitle={props.subTitle}/>
 
-      <Spectrum />
+      <Video />
      </div>
   );
 }
