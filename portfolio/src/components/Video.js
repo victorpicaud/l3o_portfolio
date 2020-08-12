@@ -3,7 +3,6 @@ import * as THREE from "three";
 import { Interaction } from 'three.interaction';
 import CameraControls from 'camera-controls';
 import TWEEN from '@tweenjs/tween.js';
-import VID from '../assets/videos/vid.mov';
 import SimplexNoise from 'simplex-noise';
 import Dat from 'dat.gui';
 
@@ -130,10 +129,6 @@ class Video extends Component {
     this.camera.lookAt( this.scene.position );
 
     this.geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    var texture = new THREE.VideoTexture( VID );
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.format = THREE.RGBFormat;
     const material = new THREE.MeshLambertMaterial({
         color: 0x0433FF,
         wireframe: true
