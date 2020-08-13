@@ -4,7 +4,16 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { Interaction } from 'three.interaction';
 import CameraControls from 'camera-controls';
 import TWEEN from '@tweenjs/tween.js';
-import REZZ from '../assets/sounds/rezz-edge.mp3'
+import S1 from '../assets/sounds/1.wav';
+import S2 from '../assets/sounds/2.wav';
+import S3 from '../assets/sounds/3.wav';
+import S4 from '../assets/sounds/4.wav';
+import S5 from '../assets/sounds/5.wav';
+import S6 from '../assets/sounds/6.wav';
+import S7 from '../assets/sounds/7.wav';
+import S8 from '../assets/sounds/8.wav';
+import S9 from '../assets/sounds/9.wav';
+import S10 from '../assets/sounds/10.wav';
 import SimplexNoise from 'simplex-noise';
 import Dat from 'dat.gui';
 
@@ -52,15 +61,10 @@ class Spectrum extends Component {
   }
 
   handleResize = () => {
-    const width = this.mount.clientWidth;
-    const height = this.mount.clientHeight;
-
-    this.setState({ width: this.mount.clientWidth, height: this.mount.clientHeight });
-
-    this.camera.aspect = width / height;
+    this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
 
-    this.renderer.setSize(width, height, false);
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
   }
 
   lockControls = () => {
@@ -120,25 +124,21 @@ class Spectrum extends Component {
       }
   }
 
+  loadSound = (id) => {
+
+    this.audioLoader.load( this.soundrefs[id], (buffer) => {
+                this.sound.setBuffer(buffer);
+                this.sound.setLoop(true);
+
+                this.sound.play();
+                this.setState({duration: buffer.duration});
+            }, (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    });
+  }
+
   showButtonForTarget = (target) => {
-    console.log( parseInt(target.name) );
-    this.pausebuttoncaster.position.x = Math.cos( parseFloat(target.name) ) * 4 * this.rscale + 0.5 * Math.cos( parseFloat(target.name));
-    this.pausebuttoncaster.position.z = Math.sin( parseFloat(target.name) ) * 4 * this.rscale + 2 * Math.cos( parseFloat(target.name));
-
-    this.bar1.position.x = Math.cos( parseFloat(target.name) ) * 4 * this.rscale + 0.5 * Math.cos( parseFloat(target.name));
-    this.bar1.position.z = Math.sin( parseFloat(target.name) ) * 4 * this.rscale + 2 * Math.cos( parseFloat(target.name));
-    this.bar2.position.x = Math.cos( parseFloat(target.name) ) * 4 * this.rscale + 0.5 * Math.cos( parseFloat(target.name));
-    this.bar2.position.z = Math.sin( parseFloat(target.name) ) * 4 * this.rscale + 2.3 * Math.cos( parseFloat(target.name));
-
-    this.cbar1.position.x = Math.cos( parseFloat(target.name) ) * 4 * this.rscale + 0.5 * Math.cos( parseFloat(target.name));
-    this.cbar1.position.z = Math.sin( parseFloat(target.name) ) * 4 * this.rscale - 1.8 * Math.cos( parseFloat(target.name));
-    this.cbar2.position.x = Math.cos( parseFloat(target.name) ) * 4 * this.rscale + 0.5 * Math.cos( parseFloat(target.name));
-    this.cbar2.position.z = Math.sin( parseFloat(target.name) ) * 4 * this.rscale - 1.8 * Math.cos( parseFloat(target.name));
-
-    this.playbutton.position.x = Math.cos( parseFloat(target.name) ) * 4 * this.rscale + 0.5 * Math.cos( parseFloat(target.name));
-    this.playbutton.position.z = Math.sin( parseFloat(target.name) ) * 4 * this.rscale + 2 * Math.cos( parseFloat(target.name));
-    this.playbutton.rotation.set(Math.PI,parseFloat(target.name),Math.PI/2);
-
+    this.group.setRotationFromAxisAngle(this.axis, -1 * parseFloat(target.name));
 
     this.pausebutton.visible = true;
     this.playbutton.visible = false;
@@ -148,19 +148,23 @@ class Spectrum extends Component {
   handleMeshClick = ( event ) => {
     let tangle = 90 - THREE.Math.radToDeg(parseFloat(event.data.target.name) % 360);
     let cangle = THREE.Math.radToDeg(this.controls.azimuthAngle);
+    let id = 0;
 
+    for (let i = 0; i < this.objects.length; i++) {
+      if( this.objects[i].id == event.data.target.id) {
+        id = i;
+      }
+    }
+    this.soundid = id;
     this.controls.damplingFactor = 0;
     let modular = this.decaymod(cangle, tangle);
     if ((event.data.originalEvent.clientX/ window.innerWidth) * 2 - 1 < -0.21) {
       modular = modular - 360;
     }
-    this.previd = event.target.id
     let decay = (tangle);
     this.controls.rotateTo(THREE.Math.degToRad(decay + modular), Math.PI/2, true);
     this.controls.damplingFactor = 0.05;
-    if (this.objects[0].id === event.target.id) {
-        this.sound.play();
-    }
+    this.loadSound(id);
     this.showButtonForTarget(event.data.target);
     this.objects.forEach( (object) => {
       this.scaleDownMesh(object);
@@ -200,8 +204,10 @@ class Spectrum extends Component {
   }
 
   componentDidMount(){
+    this.soundid = 0;
     this.angle = 0;
-    let musictitles = ["titre 1","titre 2","titre 3","titre 4","titre 5","titre 6","titre 7","titre 8","titre 9",,"titre 10"];
+    this.soundrefs = [S1,S2,S3,S4,S5,S6,S7,S8,S9,S10];
+    this.musictitles = ["MAGICAL NOTE WEAPON (Experimental Dubstep)","BATTERY LOW (Jungle)","Endless_Curiosity (Dubstep)","DIVE IN HACK (Experimental Dubstep)","DARKSTEEL COLOSSUS (Dubstep)","DESERT B (Jungle, Feat. x Stuckinwaveforms)","DEEP BOOM BAP (Rap instrumental)","PARIS BY NIGHT (Rap instrumental)","PROD TWA24 (Trap)",,"POSEIDON (Acousmatique)"];
     this.rscale = 3/2;
     this.fft = 512;
     this.amp = 1;
@@ -214,6 +220,7 @@ class Spectrum extends Component {
     this.noise = new SimplexNoise();
     this.previd = null;
     this.objects = [];
+    this.sounds = [];
     this.camtween = null;
     this.tweend = null;
 
@@ -231,16 +238,10 @@ class Spectrum extends Component {
     this.sound = new THREE.Audio( this.listener );
 
     this.audioLoader = new THREE.AudioLoader();
-    this.audioLoader.load( REZZ, (buffer) => {
-                this.sound.setBuffer(buffer);
-                this.sound.setLoop(true);
-
-                this.setState({duration: buffer.duration});
-            }, (xhr) => {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            });
 
     this.analyser = new THREE.AudioAnalyser( this.sound, 32 );
+
+    this.group = new THREE.Group();
 
     let pbgeometry = new THREE.CylinderGeometry( 0.5, 0.5, 0.2, 3 );
     let bargeometry = new THREE.BoxGeometry(1,0.2,0.3);
@@ -258,7 +259,7 @@ class Spectrum extends Component {
     this.playbutton.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
     this.playbutton.rotation.set(Math.PI,0,Math.PI/2);
     this.playbutton.scale.set(0.5,0.5,0.5);
-    this.scene.add(this.playbutton);
+    this.group.add(this.playbutton);
     this.playbutton.visible = false;
 
     this.bar1 = new THREE.Mesh(bargeometry, buttonmaterial);
@@ -273,7 +274,7 @@ class Spectrum extends Component {
     this.pausebuttoncaster.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
     this.pausebuttoncaster.rotation.set(Math.PI,0,Math.PI/2);
     this.pausebuttoncaster.scale.set(0.5,0.5,0.5);
-    this.scene.add(this.pausebuttoncaster);
+    this.group.add(this.pausebuttoncaster);
 
 
     this.pausebutton = new THREE.Object3D();
@@ -289,7 +290,7 @@ class Spectrum extends Component {
     this.bar2.scale.set(0.5,0.5,0.5);
     this.pausebutton.add(this.bar1);
     this.pausebutton.add(this.bar2);
-    this.scene.add(this.pausebutton);
+    this.group.add(this.pausebutton);
     this.pausebutton.visible = false;
 
     this.closebutton = new THREE.Object3D();
@@ -306,7 +307,9 @@ class Spectrum extends Component {
     this.closebutton.add(this.cbar1);
     this.closebutton.add(this.cbar2);
     this.closebutton.visible = false;
-    this.scene.add(this.closebutton);
+    this.group.add(this.closebutton);
+
+    this.scene.add(this.group);
 
     this.closebutton.on('click', this.handleCloseClick);
     this.pausebuttoncaster.on('click', this.handlePlayClick);
@@ -354,6 +357,7 @@ class Spectrum extends Component {
     this.controls.rotateSpeed = 0.1;
     this.controls.autoRotate = false;
     this.controls.mouseButtons.wheel = CameraControls.ACTION.NONE;
+    this.controls.mouseButtons.right = CameraControls.ACTION.NONE;
 
 
 
@@ -393,11 +397,11 @@ class Spectrum extends Component {
       var upperMaxFr = upperMax / upperHalfArray.length;
       var upperAvgFr = upperAvg / upperHalfArray.length;
 
-      this.makeRoughBall(this.objects[0], this.modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0, 8), this.modulate(upperAvgFr, 0, 1, 0, 4), false);
+      this.makeRoughBall(this.objects[this.soundid], this.modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0, 8), this.modulate(upperAvgFr, 0, 1, 0, 4), false);
     } else {
-      this.makeRoughBall(this.objects[0], 0, 0, true);
+      this.makeRoughBall(this.objects[this.soundid], 0, 0, true);
     }
-    this.playbutton.rotateOnWorldAxis(this.axis, THREE.Math.degToRad(this.angle));
+    this.group.rotateOnWorldAxis(this.axis, THREE.Math.degToRad(this.angle));
     window.requestAnimationFrame( this.animate );
 
     const delta = this.clock.getDelta();
