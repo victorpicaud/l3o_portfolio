@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import * as THREE from "three";
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { Interaction } from 'three.interaction';
 import CameraControls from 'camera-controls';
 import TWEEN from '@tweenjs/tween.js';
@@ -14,6 +13,7 @@ import S7 from '../assets/sounds/7.wav';
 import S8 from '../assets/sounds/8.wav';
 import S9 from '../assets/sounds/9.wav';
 import S10 from '../assets/sounds/10.wav';
+import SOLVIC from 'three/examples/fonts/helvetiker_regular.typeface.json';
 import SimplexNoise from 'simplex-noise';
 import Dat from 'dat.gui';
 
@@ -98,6 +98,7 @@ class Spectrum extends Component {
   handleCloseClick = () => {
     if (this.sound.isPlaying) {
       this.sound.stop();
+      this.isPlaying = false;
     }
     this.pausebutton.visible = false;
     this.playbutton.visible = false;
@@ -122,16 +123,18 @@ class Spectrum extends Component {
         this.pausebutton.visible = true;
         this.playbutton.visible = false;
       }
+      this.isPlaying = this.sound.isPlaying;
   }
 
-  loadSound = (id) => {
+  loadSound = (id, play) => {
 
     this.audioLoader.load( this.soundrefs[id], (buffer) => {
                 this.sound.setBuffer(buffer);
                 this.sound.setLoop(true);
+                if (play) {
+                  setTimeout(() => {  this.sound.play(); this.isPlaying = true; }, 2000);
+                }
 
-                this.sound.play();
-                this.setState({duration: buffer.duration});
             }, (xhr) => {
                 console.log((xhr.loaded / xhr.total * 100) + '% loaded');
     });
@@ -164,7 +167,7 @@ class Spectrum extends Component {
     let decay = (tangle);
     this.controls.rotateTo(THREE.Math.degToRad(decay + modular), Math.PI/2, true);
     this.controls.damplingFactor = 0.05;
-    this.loadSound(id);
+    this.loadSound(id, true);
     this.showButtonForTarget(event.data.target);
     this.objects.forEach( (object) => {
       this.scaleDownMesh(object);
@@ -204,6 +207,7 @@ class Spectrum extends Component {
   }
 
   componentDidMount(){
+    this.isPlaying = false;
     this.soundid = 0;
     this.angle = 0;
     this.soundrefs = [S1,S2,S3,S4,S5,S6,S7,S8,S9,S10];
@@ -309,12 +313,34 @@ class Spectrum extends Component {
     this.closebutton.visible = false;
     this.group.add(this.closebutton);
 
-    this.scene.add(this.group);
 
     this.closebutton.on('click', this.handleCloseClick);
     this.pausebuttoncaster.on('click', this.handlePlayClick);
     this.playbutton.on('click', this.handlePlayClick);
 
+    this.fontloader = new THREE.FontLoader();
+    let txtmaterials = [
+        new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true } ), // front
+        new THREE.MeshPhongMaterial( { color: 0xffffff } ) // side
+      ];
+
+    this.font = this.fontloader.parse(SOLVIC);
+    this.txtgeometry = new THREE.TextGeometry( 'Test title', {
+        font: this.font,
+        size: 0.6,
+        height: 0.2,
+        curveSegments: 12,
+    } );
+    this.txtgeometry.center();
+    this.txtmesh = new THREE.Mesh(this.txtgeometry,txtmaterials);
+    this.txtmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
+    this.txtmesh.position.y = 2;
+    this.txtmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
+    this.txtmesh.rotation.set(0,Math.PI/2,0);
+    console.log(this.txtmesh.size);
+    this.group.add(this.txtmesh);
+
+    this.scene.add(this.group);
 
     this.geometry = new THREE.IcosahedronGeometry(1, 3);
     const material = new THREE.MeshLambertMaterial({
@@ -380,7 +406,7 @@ class Spectrum extends Component {
     }
   animate = () => {
     this.analyser.fftSize = this.fft;
-    if (this.sound.isPlaying) {
+    if (this.isPlaying) {
       let dataArray = this.analyser.getFrequencyData();
 
       var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
