@@ -100,9 +100,12 @@ class Spectrum extends Component {
       this.sound.stop();
       this.isPlaying = false;
     }
+    this.controls.maxPolarAngle = Math.PI/2;
     this.pausebutton.visible = false;
     this.playbutton.visible = false;
     this.closebutton.visible = false;
+    this.txtmesh.visible = false;
+    this.descmesh.visible = false;
     this.controls.zoomTo( 1, true );
     this.controls.rotate(0, -Math.PI/2, true);
     this.objects.forEach( (object) => {
@@ -111,6 +114,7 @@ class Spectrum extends Component {
       object.on('mouseout', this.scaleDownMeshEvent);
     });
     this.unlockControls();
+    this.isLocked = false;
   }
 
   handlePlayClick = () => {
@@ -126,13 +130,19 @@ class Spectrum extends Component {
       this.isPlaying = this.sound.isPlaying;
   }
 
+  textFocusCam = ( event  ) => {
+  }
+
   loadSound = (id, play) => {
+    this.txtmesh.geometry = this.musicgeo[id];
+    this.descmesh.geometry = this.genregeo[id];
+
 
     this.audioLoader.load( this.soundrefs[id], (buffer) => {
                 this.sound.setBuffer(buffer);
                 this.sound.setLoop(true);
                 if (play) {
-                  setTimeout(() => {  this.sound.play(); this.isPlaying = true; }, 2000);
+                  this.sound.play(); this.isPlaying = true;
                 }
 
             }, (xhr) => {
@@ -146,9 +156,15 @@ class Spectrum extends Component {
     this.pausebutton.visible = true;
     this.playbutton.visible = false;
     this.closebutton.visible = true;
+    this.txtmesh.visible = true;
+    this.descmesh.visible = true;
   }
 
   handleMeshClick = ( event ) => {
+    this.txtmesh.rotation.set(0,Math.PI/2,0);
+    this.group.position.set(0,this.offsety,0);
+    this.group.position.y = 0 + this.offsety;
+    this.isLocked = true;
     let tangle = 90 - THREE.Math.radToDeg(parseFloat(event.data.target.name) % 360);
     let cangle = THREE.Math.radToDeg(this.controls.azimuthAngle);
     let id = 0;
@@ -165,7 +181,8 @@ class Spectrum extends Component {
       modular = modular - 360;
     }
     let decay = (tangle);
-    this.controls.rotateTo(THREE.Math.degToRad(decay + modular), Math.PI/2, true);
+    this.controls.maxPolarAngle = Math.PI/2 + Math.PI/4;
+    this.controls.rotateTo(THREE.Math.degToRad(decay + modular), Math.PI/2 + Math.PI/64, true);
     this.controls.damplingFactor = 0.05;
     this.loadSound(id, true);
     this.showButtonForTarget(event.data.target);
@@ -181,17 +198,45 @@ class Spectrum extends Component {
   }
 
   handleFocus = ( event ) => {
+    if (this.timeoutId) {
+      window.clearTimeout(this.timeoutId)
+    }
     var target = new THREE.Vector3(1.5, 1.5, 1.5);
     var current = event.data.target.scale;
     this.tweend = new TWEEN.Tween(current).to(target, 1000);
     this.tweend.onUpdate(function() {
       event.data.target.scale.set(current.x, current.y, current.z);
     });
+
+    let id = 0;
+
+    for (let i = 0; i < this.objects.length; i++) {
+      if( this.objects[i].id == event.data.target.id) {
+        id = i;
+      }
+    }
     this.tweend.easing(TWEEN.Easing.Bounce.In);
     this.tweend.start();
+    this.txtmesh.geometry = this.musicgeo[id];
+    this.txtmesh.visible = true;
+    this.txtmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
+    this.txtmesh.position.y = 2;
+    this.txtmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
+    this.group.setRotationFromAxisAngle(this.axis, 0);
+    this.txtmesh.lookAt(this.camera.position);
+
+    this.group.position.set(-Math.cos( 0 ) * 4 * this.rscale,2 + this.offsety,-Math.sin( 0 ) * 4 * this.rscale);
+
+  }
+
+  hideText = () => {
+    if (this.isLocked == false) {
+      this.txtmesh.visible = false;
+    }
   }
 
   scaleDownMesh = (mesh) => {
+
     var target = new THREE.Vector3(1, 1, 1);
     var current = mesh.scale;
     this.tweend = new TWEEN.Tween(current).to(target, 1000);
@@ -200,6 +245,7 @@ class Spectrum extends Component {
     });
     this.tweend.easing(TWEEN.Easing.Bounce.Out);
     this.tweend.start();
+    this.timeoutId = window.setTimeout(this.hideText, 1000);
   }
 
   scaleDownMeshEvent = ( event ) => {
@@ -207,11 +253,15 @@ class Spectrum extends Component {
   }
 
   componentDidMount(){
+    this.offsety = 2;
+    this.txtrotsv = null;
+    this.timeoutId = null;
     this.isPlaying = false;
     this.soundid = 0;
     this.angle = 0;
     this.soundrefs = [S1,S2,S3,S4,S5,S6,S7,S8,S9,S10];
-    this.musictitles = ["MAGICAL NOTE WEAPON (Experimental Dubstep)","BATTERY LOW (Jungle)","Endless_Curiosity (Dubstep)","DIVE IN HACK (Experimental Dubstep)","DARKSTEEL COLOSSUS (Dubstep)","DESERT B (Jungle, Feat. x Stuckinwaveforms)","DEEP BOOM BAP (Rap instrumental)","PARIS BY NIGHT (Rap instrumental)","PROD TWA24 (Trap)",,"POSEIDON (Acousmatique)"];
+    let musictitles = ["MAGICAL NOTE WEAPON","BATTERY LOW","Endless Curiosity","DIVE IN HACK","DARKSTEEL COLOSSUS","DESERT B","DEEP BOOM BAP","PARIS BY NIGHT","PROD TWA24","POSEIDON"];
+    let musicgenre = ['Experimental Dubstep','Jungle','Dubstep','Experimental Dubstep','Dubstep','(Jungle, Feat. x Stuckinwaveforms)','(Rap instrumental)', '(Rap instrumental)', '(Trap)','(Acousmatique)']
     this.rscale = 3/2;
     this.fft = 512;
     this.amp = 1;
@@ -227,10 +277,11 @@ class Spectrum extends Component {
     this.sounds = [];
     this.camtween = null;
     this.tweend = null;
+    this.isLocked = false;
 
     this.clock = new THREE.Clock();
     this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.01, 20 );
-    this.camera.position.set( 0, 2, 10);
+    this.camera.position.set( 0, 3 + this.offsety, 10);
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color( 0xffffffff );
@@ -247,9 +298,9 @@ class Spectrum extends Component {
 
     this.group = new THREE.Group();
 
-    let pbgeometry = new THREE.CylinderGeometry( 0.5, 0.5, 0.2, 3 );
-    let bargeometry = new THREE.BoxGeometry(1,0.2,0.3);
-    let castergrometry = new THREE.BoxGeometry(1,0.2, 0.9);
+    let pbgeometry = new THREE.CylinderGeometry( 0.5, 0.5, 0.1, 3 );
+    let bargeometry = new THREE.BoxGeometry(1,0.1,0.3);
+    let castergrometry = new THREE.BoxGeometry(1,0.1, 0.9);
 
     let buttonmaterial = new THREE.MeshBasicMaterial( {color: 0x0000000} );
     let castermaterial = new THREE.MeshLambertMaterial({
@@ -275,9 +326,9 @@ class Spectrum extends Component {
 
     this.pausebuttoncaster.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
     this.pausebuttoncaster.position.y = 1;
-    this.pausebuttoncaster.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
+    this.pausebuttoncaster.position.z = Math.sin( 0 ) * 4 * this.rscale + 2.15;
     this.pausebuttoncaster.rotation.set(Math.PI,0,Math.PI/2);
-    this.pausebuttoncaster.scale.set(0.5,0.5,0.5);
+    this.pausebuttoncaster.scale.set(1,1,1);
     this.group.add(this.pausebuttoncaster);
 
 
@@ -325,20 +376,43 @@ class Spectrum extends Component {
       ];
 
     this.font = this.fontloader.parse(SOLVIC);
-    this.txtgeometry = new THREE.TextGeometry( 'Test title', {
-        font: this.font,
-        size: 0.6,
-        height: 0.2,
-        curveSegments: 12,
-    } );
-    this.txtgeometry.center();
-    this.txtmesh = new THREE.Mesh(this.txtgeometry,txtmaterials);
+    this.musicgeo = [];
+    this.genregeo = [];
+    for ( let i = 0; i < musictitles.length; i ++ ) {
+      let txtgeometry = new THREE.TextGeometry( musictitles[i], {
+          font: this.font,
+          size: 0.4,
+          height: 0,
+          curveSegments: 12,
+      } );
+      txtgeometry.center();
+      let descgeo = new THREE.TextGeometry( musicgenre[i], {
+          font: this.font,
+          size: 0.2,
+          height: 0,
+          curveSegments: 12,
+      } );
+      descgeo.center();
+      this.genregeo.push(descgeo);
+      this.musicgeo.push(txtgeometry);
+    }
+
+    this.txtmesh = new THREE.Mesh(this.musicgeo[0],txtmaterials);
     this.txtmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
     this.txtmesh.position.y = 2;
     this.txtmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
     this.txtmesh.rotation.set(0,Math.PI/2,0);
-    console.log(this.txtmesh.size);
+
+    this.descmesh = new THREE.Mesh(this.musicgeo[0],txtmaterials);
+    this.descmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
+    this.descmesh.position.y = -2;
+    this.descmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
+    this.descmesh.rotation.set(0,Math.PI/2,0);
+    this.txtmesh.visible = false;
+    this.descmesh.visible = false;
+
     this.group.add(this.txtmesh);
+    this.group.add(this.descmesh);
 
     this.scene.add(this.group);
 
@@ -358,6 +432,7 @@ class Spectrum extends Component {
 
       mesh.name = t;
       mesh.position.x = Math.cos( t ) * 4 * this.rscale;
+      mesh.position.y = this.offsety
       mesh.position.z = Math.sin( t ) * 4 * this.rscale;
       mesh.on('click', this.handleMeshClick);
       mesh.on('mouseover', this.handleFocus);
@@ -384,6 +459,7 @@ class Spectrum extends Component {
     this.controls.autoRotate = false;
     this.controls.mouseButtons.wheel = CameraControls.ACTION.NONE;
     this.controls.mouseButtons.right = CameraControls.ACTION.NONE;
+    this.controls.addEventListener( 'sleep', this.textFocusCam );
 
 
 
@@ -406,6 +482,7 @@ class Spectrum extends Component {
     }
   animate = () => {
     this.analyser.fftSize = this.fft;
+
     if (this.isPlaying) {
       let dataArray = this.analyser.getFrequencyData();
 
