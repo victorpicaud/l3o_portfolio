@@ -15,7 +15,7 @@ function HomePage(props) {
 
   return (
     <div>
-      <Hero title={props.title} subTitle={props.subTitle} />
+
       <Carousel activeIndex={index} onSelect={handleSelect} pause={true}>
         <Carousel.Item>
           <Spectrum/>

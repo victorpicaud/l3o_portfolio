@@ -162,8 +162,10 @@ class Spectrum extends Component {
 
   handleMeshClick = ( event ) => {
     this.txtmesh.rotation.set(0,Math.PI/2,0);
+    this.descmesh.rotation.set(0,Math.PI/2,0);
+    this.descmesh.position.y *= -1.2;
     this.group.position.set(0,this.offsety,0);
-    this.group.position.y = 0 + this.offsety;
+    this.group.position.y = 0;
     this.isLocked = true;
     let tangle = 90 - THREE.Math.radToDeg(parseFloat(event.data.target.name) % 360);
     let cangle = THREE.Math.radToDeg(this.controls.azimuthAngle);
@@ -225,13 +227,21 @@ class Spectrum extends Component {
     this.group.setRotationFromAxisAngle(this.axis, 0);
     this.txtmesh.lookAt(this.camera.position);
 
-    this.group.position.set(-Math.cos( 0 ) * 4 * this.rscale,2 + this.offsety,-Math.sin( 0 ) * 4 * this.rscale);
+    this.descmesh.geometry = this.genregeo[id];
+    this.descmesh.visible = true;
+    this.descmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
+    this.descmesh.position.y = 1.5;
+    this.descmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
+    this.descmesh.lookAt(this.camera.position);
+
+    this.group.position.set(-Math.cos( 0 ) * 4 * this.rscale,2,-Math.sin( 0 ) * 4 * this.rscale);
 
   }
 
   hideText = () => {
     if (this.isLocked == false) {
       this.txtmesh.visible = false;
+      this.descmesh.visible = false;
     }
   }
 
@@ -253,7 +263,6 @@ class Spectrum extends Component {
   }
 
   componentDidMount(){
-    this.offsety = 2;
     this.txtrotsv = null;
     this.timeoutId = null;
     this.isPlaying = false;
@@ -281,7 +290,7 @@ class Spectrum extends Component {
 
     this.clock = new THREE.Clock();
     this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.01, 20 );
-    this.camera.position.set( 0, 3 + this.offsety, 10);
+    this.camera.position.set( 0, 3, 10);
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color( 0xffffffff );
@@ -432,7 +441,7 @@ class Spectrum extends Component {
 
       mesh.name = t;
       mesh.position.x = Math.cos( t ) * 4 * this.rscale;
-      mesh.position.y = this.offsety
+      mesh.position.y = 0;
       mesh.position.z = Math.sin( t ) * 4 * this.rscale;
       mesh.on('click', this.handleMeshClick);
       mesh.on('mouseover', this.handleFocus);
@@ -454,7 +463,7 @@ class Spectrum extends Component {
     this.controls.enableDamping = true;
     this.controls.dollySpeed = 0;
     this.controls.maxPolarAngle = Math.PI/2;
-    this.controls.minPolarAngle = Math.PI/4 + Math.PI/8;
+    this.controls.minPolarAngle = Math.PI/2 - Math.PI/16;
     this.controls.rotateSpeed = 0.1;
     this.controls.autoRotate = false;
     this.controls.mouseButtons.wheel = CameraControls.ACTION.NONE;
