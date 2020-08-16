@@ -189,7 +189,7 @@ class Spectrum extends Component {
     this.loadSound(id, true);
     this.showButtonForTarget(event.data.target);
     this.objects.forEach( (object) => {
-      this.scaleDownMesh(object);
+      this.scaleDownMesh(object,true);
       object.off('click', this.handleMeshClick);
       object.off('mouseover', this.handleFocus);
       object.off('mouseout', this.scaleDownMeshEvent);
@@ -203,12 +203,7 @@ class Spectrum extends Component {
     if (this.timeoutId) {
       window.clearTimeout(this.timeoutId)
     }
-    var target = new THREE.Vector3(1.5, 1.5, 1.5);
-    var current = event.data.target.scale;
-    this.tweend = new TWEEN.Tween(current).to(target, 1000);
-    this.tweend.onUpdate(function() {
-      event.data.target.scale.set(current.x, current.y, current.z);
-    });
+
 
     let id = 0;
 
@@ -217,8 +212,22 @@ class Spectrum extends Component {
         id = i;
       }
     }
-    this.tweend.easing(TWEEN.Easing.Bounce.In);
-    this.tweend.start();
+
+    for (let i = 0; i < this.tweend.length; i++) {
+      if (this.objects[i].scale != new THREE.Vector3(1, 1, 1) && i != id) {
+        this.scaleDownMesh(this.objects[i], false);
+      }
+    }
+    var target = new THREE.Vector3(1.5, 1.5, 1.5);
+    var current = event.data.target.scale;
+    this.tweend[id] = new TWEEN.Tween(current).to(target, 1000);
+    this.tweend[id].onUpdate(function() {
+      event.data.target.scale.set(current.x, current.y, current.z);
+    });
+
+
+    this.tweend[id].easing(TWEEN.Easing.Bounce.In);
+    this.tweend[id].start();
     this.txtmesh.geometry = this.musicgeo[id];
     this.txtmesh.visible = true;
     this.txtmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
@@ -245,21 +254,31 @@ class Spectrum extends Component {
     }
   }
 
-  scaleDownMesh = (mesh) => {
+  scaleDownMesh = (mesh,hidetxt) => {
+
+    let id = 0;
+
+    for (let i = 0; i < this.objects.length; i++) {
+      if( this.objects[i].id == mesh.id) {
+        id = i;
+      }
+    }
 
     var target = new THREE.Vector3(1, 1, 1);
     var current = mesh.scale;
-    this.tweend = new TWEEN.Tween(current).to(target, 1000);
-    this.tweend.onUpdate(function() {
+    this.tweend[id] = new TWEEN.Tween(current).to(target, 1000);
+    this.tweend[id].onUpdate(function() {
       mesh.scale.set(current.x, current.y, current.z);
     });
-    this.tweend.easing(TWEEN.Easing.Bounce.Out);
-    this.tweend.start();
-    this.timeoutId = window.setTimeout(this.hideText, 1000);
+    this.tweend[id].easing(TWEEN.Easing.Bounce.Out);
+    this.tweend[id].start();
+    if (hidetxt) {
+      this.timeoutId = window.setTimeout(this.hideText, 1000);
+    }
   }
 
   scaleDownMeshEvent = ( event ) => {
-    this.scaleDownMesh(event.data.target);
+    this.scaleDownMesh(event.data.target,true);
   }
 
   componentDidMount(){
@@ -285,7 +304,7 @@ class Spectrum extends Component {
     this.objects = [];
     this.sounds = [];
     this.camtween = null;
-    this.tweend = null;
+    this.tweend = [null,null,null,null,null,null,null,null,null,null];
     this.isLocked = false;
 
     this.clock = new THREE.Clock();
@@ -525,7 +544,7 @@ class Spectrum extends Component {
   render () {
     return(
         <div
-          style={{width: "100%", height: "750px"}}
+          style={{width: "100%", height: "100%"}}
           ref={(mount) => { this.mount = mount }}
           />
     );

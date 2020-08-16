@@ -49,6 +49,10 @@ code {
   padding: 10px 15px;
 }
 
+.no-border {
+  background-color: #ffffff;
+}
+
 :focus {
     outline: none;
 }

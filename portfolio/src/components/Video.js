@@ -5,6 +5,7 @@ import CameraControls from 'camera-controls';
 import TWEEN from '@tweenjs/tween.js';
 import SimplexNoise from 'simplex-noise';
 import Dat from 'dat.gui';
+import {CSS3DObject} from 'three-css3drenderer';
 
 CameraControls.install( { THREE: THREE } );
 
@@ -50,15 +51,10 @@ class Video extends Component {
   }
 
   handleResize = () => {
-    const width = this.mount.clientWidth;
-    const height = this.mount.clientHeight;
-
-    this.setState({ width: this.mount.clientWidth, height: this.mount.clientHeight });
-
-    this.camera.aspect = width / height;
+    this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
 
-    this.renderer.setSize(width, height, false);
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
   }
 
 
@@ -128,6 +124,7 @@ class Video extends Component {
     this.scene.background = new THREE.Color( 0xffffffff );
     this.camera.lookAt( this.scene.position );
 
+
     this.geometry = new THREE.BoxGeometry( 1, 1, 1 );
     const material = new THREE.MeshLambertMaterial({
         color: 0x0433FF,
@@ -168,6 +165,8 @@ class Video extends Component {
     this.controls.rotateSpeed = 0.1;
     this.controls.autoRotate = false;
     this.controls.enableKeys = false;
+    this.controls.mouseButtons.wheel = CameraControls.ACTION.NONE;
+    this.controls.mouseButtons.right = CameraControls.ACTION.NONE;
 
 
 
@@ -193,6 +192,10 @@ class Video extends Component {
 
     window.requestAnimationFrame( this.animate );
 
+    this.objects.forEach((object) => {
+      object.lookAt(this.camera.position);
+    });
+
     const delta = this.clock.getDelta();
     const hasControlsUpdated = this.controls.update( delta );
     TWEEN.update();
@@ -202,7 +205,7 @@ class Video extends Component {
   render () {
     return(
         <div
-          style={{width: "100%", height: "500px"}}
+          style={{width: "100%", height: "100%"}}
           ref={(mount) => { this.mount = mount }}
           />
     );

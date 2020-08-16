@@ -15,14 +15,18 @@
     "react-awesome-slider": "^4.1.0",
     "react-bootstrap": "^1.3.0",
     "react-dom": "^16.13.1",
+    "react-responsive-carousel": "^3.2.9",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "react-spring": "^8.0.27",
     "simplex-noise": "^2.4.0",
     "three": "^0.119.0",
+    "three-css3drenderer": "^1.0.1",
     "three-dat.gui": "^2.0.7",
     "three.interaction": "^0.2.3",
     "three.proton.js": "^0.2.3",
+    "threex": "^1.0.0",
+    "threex.videotexture": "^1.0.0",
     "tweenjs": "^1.0.2"
   },
   "scripts": {
