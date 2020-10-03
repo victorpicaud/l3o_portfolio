@@ -96,10 +96,11 @@ class Spectrum extends Component {
   }
 
   handleCloseClick = () => {
-    if (this.sound.isPlaying) {
-      this.sound.stop();
+    if (!this.htmlaudio.paused) {
+      this.htmlaudio.pause();
       this.isPlaying = false;
     }
+    this.htmlaudio.currentTime = 0;
     this.controls.maxPolarAngle = Math.PI/2;
     this.pausebutton.visible = false;
     this.playbutton.visible = false;
@@ -118,16 +119,16 @@ class Spectrum extends Component {
   }
 
   handlePlayClick = () => {
-      if (this.sound.isPlaying) {
-        this.sound.pause();
+      if (!this.htmlaudio.paused) {
+        this.htmlaudio.pause();
         this.pausebutton.visible = false;
         this.playbutton.visible = true;
       } else {
-        this.sound.play();
+        this.htmlaudio.play();
         this.pausebutton.visible = true;
         this.playbutton.visible = false;
       }
-      this.isPlaying = this.sound.isPlaying;
+      this.isPlaying = !this.htmlaudio.paused;
   }
 
   textFocusCam = ( event  ) => {
@@ -137,17 +138,12 @@ class Spectrum extends Component {
     this.txtmesh.geometry = this.musicgeo[id];
     this.descmesh.geometry = this.genregeo[id];
 
-
-    this.audioLoader.load( this.soundrefs[id], (buffer) => {
-                this.sound.setBuffer(buffer);
-                this.sound.setLoop(true);
-                if (play) {
-                  this.sound.play(); this.isPlaying = true;
-                }
-
-            }, (xhr) => {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-    });
+    this.htmlaudio.pause();
+    this.htmlaudio.src = this.soundrefs[id];
+    this.htmlaudio.load();
+    if (play) {
+      this.htmlaudio.play(); this.isPlaying = true;
+    }
   }
 
   showButtonForTarget = (target) => {
@@ -172,7 +168,7 @@ class Spectrum extends Component {
     let id = 0;
 
     for (let i = 0; i < this.objects.length; i++) {
-      if( this.objects[i].id == event.data.target.id) {
+      if( this.objects[i].id === event.data.target.id) {
         id = i;
       }
     }
@@ -208,13 +204,13 @@ class Spectrum extends Component {
     let id = 0;
 
     for (let i = 0; i < this.objects.length; i++) {
-      if( this.objects[i].id == event.data.target.id) {
+      if( this.objects[i].id === event.data.target.id) {
         id = i;
       }
     }
 
     for (let i = 0; i < this.tweend.length; i++) {
-      if (this.objects[i].scale != new THREE.Vector3(1, 1, 1) && i != id) {
+      if (this.objects[i].scale !== new THREE.Vector3(1, 1, 1) && i !== id) {
         this.scaleDownMesh(this.objects[i], false);
       }
     }
@@ -248,7 +244,7 @@ class Spectrum extends Component {
   }
 
   hideText = () => {
-    if (this.isLocked == false) {
+    if (this.isLocked === false) {
       this.txtmesh.visible = false;
       this.descmesh.visible = false;
     }
@@ -259,7 +255,7 @@ class Spectrum extends Component {
     let id = 0;
 
     for (let i = 0; i < this.objects.length; i++) {
-      if( this.objects[i].id == mesh.id) {
+      if( this.objects[i].id === mesh.id) {
         id = i;
       }
     }
@@ -319,6 +315,9 @@ class Spectrum extends Component {
     this.camera.add( this.listener );
 
     this.sound = new THREE.Audio( this.listener );
+
+    this.htmlaudio = new Audio(S1);
+    this.sound.setMediaElementSource( this.htmlaudio );
 
     this.audioLoader = new THREE.AudioLoader();
 
@@ -391,7 +390,6 @@ class Spectrum extends Component {
     this.closebutton.add(this.cbar2);
     this.closebutton.visible = false;
     this.group.add(this.closebutton);
-
 
     this.closebutton.on('click', this.handleCloseClick);
     this.pausebuttoncaster.on('click', this.handlePlayClick);
@@ -478,6 +476,8 @@ class Spectrum extends Component {
 
     const interaction = new Interaction(this.renderer, this.scene, this.camera);
 
+    console.log(interaction);
+
     this.controls = new CameraControls( this.camera, this.renderer.domElement );
     this.controls.enableDamping = true;
     this.controls.dollySpeed = 0;
@@ -517,15 +517,10 @@ class Spectrum extends Component {
       var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
       var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
 
-      var overallAvg = this.avg(dataArray);
       var lowerMax = this.max(lowerHalfArray);
-      var lowerAvg = this.avg(lowerHalfArray);
-      var upperMax = this.max(upperHalfArray);
       var upperAvg = this.avg(upperHalfArray);
 
       var lowerMaxFr = lowerMax / lowerHalfArray.length;
-      var lowerAvgFr = lowerAvg / lowerHalfArray.length;
-      var upperMaxFr = upperMax / upperHalfArray.length;
       var upperAvgFr = upperAvg / upperHalfArray.length;
 
       this.makeRoughBall(this.objects[this.soundid], this.modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0, 8), this.modulate(upperAvgFr, 0, 1, 0, 4), false);
@@ -536,7 +531,7 @@ class Spectrum extends Component {
     window.requestAnimationFrame( this.animate );
 
     const delta = this.clock.getDelta();
-    const hasControlsUpdated = this.controls.update( delta );
+    this.controls.update( delta );
     TWEEN.update();
     this.renderer.render( this.scene, this.camera );
    }

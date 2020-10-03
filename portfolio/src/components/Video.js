@@ -3,7 +3,6 @@ import * as THREE from "three";
 import { Interaction } from 'three.interaction';
 import CameraControls from 'camera-controls';
 import TWEEN from '@tweenjs/tween.js';
-import {CSS3DObject} from 'three-css3drenderer';
 import SOLVIC from 'three/examples/fonts/helvetiker_regular.typeface.json';
 
 import BIO360 from '../assets/video/biomutant/biomutant360.mp4';
@@ -26,7 +25,8 @@ class Video extends Component {
       height: 400,
       width: 400,
       focusing: false,
-      duration: 0
+      duration: 0,
+      quality: 1080
     }
   }
 
@@ -43,6 +43,10 @@ class Video extends Component {
     this.closebutton.visible = false;
     this.txtmesh.visible = false;
     this.descmesh.visible = false;
+    this.resolution360.visible = false;
+    this.resolution720.visible = false;
+    this.resolution1080.visible = false;
+
     this.fullscreenbutton.visible = false;
     this.controls.zoomTo( 1, true );
     this.controls.rotate(0, -Math.PI/2, true);
@@ -84,11 +88,22 @@ class Video extends Component {
     return(i * 360);
   }
 
-  loadVideo = (id, play) => {
+  loadVideo = (id, play, quality) => {
     this.txtmesh.geometry = this.musicgeo[id];
     this.descmesh.geometry = this.genregeo[id];
 
-    this.video.play();
+    this.video.pause();
+    if (quality === 360) {
+        this.video.src = this.videorefs360[id];
+    } else if (quality === 720) {
+        this.video.src = this.videorefs720[id];
+    } else if (quality === 1080) {
+        this.video.src = this.videorefs1080[id];
+    }
+    this.video.load();
+    if (play) {
+      this.video.play();
+    }
   }
 
   lockControls = () => {
@@ -108,6 +123,7 @@ class Video extends Component {
     this.txtmesh.visible = true;
     this.descmesh.visible = true;
     this.fullscreenbutton.visible = true;
+    this.resolution360.visible = true;
   }
 
   handleMeshClick = ( event ) => {
@@ -122,7 +138,7 @@ class Video extends Component {
     let id = 0;
 
     for (let i = 0; i < this.objects.length; i++) {
-      if( this.objects[i].id == event.data.target.id) {
+      if( this.objects[i].id === event.data.target.id) {
         id = i;
       }
     }
@@ -137,7 +153,7 @@ class Video extends Component {
     this.controls.maxPolarAngle = Math.PI/2 + Math.PI/4;
     this.controls.rotateTo(THREE.Math.degToRad(decay + modular), Math.PI/2 + Math.PI/64, true);
     this.controls.damplingFactor = 0.05;
-    this.loadVideo(id, true);
+    this.loadVideo(id, true, 360);
     this.showButtonForTarget(event.data.target);
     this.objects.forEach( (object) => {
       this.scaleDownMesh(object,true);
@@ -150,6 +166,14 @@ class Video extends Component {
     this.lockControls();
   }
 
+  handleQualityMenu = (event) => {
+    this.resolution360.visible = true;
+    this.resolution720.visible = true;
+    this.resolution720.position.y = -0.8;
+    this.resolution1080.visible = true;
+    this.resolution1080.position.y = -0.6;
+  }
+
   handleFocus = ( event ) => {
     if (this.timeoutId) {
       window.clearTimeout(this.timeoutId)
@@ -159,13 +183,13 @@ class Video extends Component {
     let id = 0;
 
     for (let i = 0; i < this.objects.length; i++) {
-      if( this.objects[i].id == event.data.target.id) {
+      if( this.objects[i].id === event.data.target.id) {
         id = i;
       }
     }
 
     for (let i = 0; i < this.tweend.length; i++) {
-      if (this.objects[i].scale != new THREE.Vector3(1, 1, 1) && i != id) {
+      if (this.objects[i].scale !== new THREE.Vector3(1, 1, 1) && i !== id) {
         this.scaleDownMesh(this.objects[i], false);
       }
     }
@@ -198,7 +222,7 @@ class Video extends Component {
   }
 
   hideText = () => {
-    if (this.isLocked == false) {
+    if (this.isLocked === false) {
       this.txtmesh.visible = false;
       this.descmesh.visible = false;
     }
@@ -221,7 +245,7 @@ class Video extends Component {
     let id = 0;
 
     for (let i = 0; i < this.objects.length; i++) {
-      if( this.objects[i].id == mesh.id) {
+      if( this.objects[i].id === mesh.id) {
         id = i;
       }
     }
@@ -252,8 +276,9 @@ class Video extends Component {
     this.isPlaying = false;
     this.videoid = 0;
     this.angle = 0;
-    this.videorefs = [this.bio360,this.bio720,this.bio1080,this.hoz360,this.hoz720,this.hoz1080,this.out360,this.out720];
-
+    this.videorefs360 = [BIO360,HOZ360,OUT360];
+    this.videorefs720 = [BIO720,HOZ720,OUT720];
+    this.videorefs1080 = [BIO1080,HOZ1080];
     this.previd = null;
     this.objects = [];
     this.sounds = [];
@@ -389,6 +414,59 @@ class Video extends Component {
     this.group.add(this.txtmesh);
     this.group.add(this.descmesh);
 
+    let resgeometry360 = new THREE.TextGeometry( "360p", {
+        font: this.font,
+        size: 0.2,
+        height: 0,
+        curveSegments: 12,
+    } );
+    resgeometry360.center();
+    let resgeometry720 = new THREE.TextGeometry( "720p", {
+        font: this.font,
+        size: 0.2,
+        height: 0,
+        curveSegments: 12,
+    } );
+    resgeometry720.center();
+    let resgeometry1080 = new THREE.TextGeometry( "1080p", {
+        font: this.font,
+        size: 0.2,
+        height: 0,
+        curveSegments: 12,
+    } );
+    resgeometry1080.center();
+    this.resolution360 = new THREE.Mesh(resgeometry360, txtmaterials);
+    this.resolution360.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
+    this.resolution360.position.y = -1;
+    this.resolution360.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
+    this.resolution360.rotation.set(0,3*Math.PI/4,0);
+    this.resolution360.visible = false;
+    this.resolution360.scale.set(0.7,0.7,0.7);
+
+    this.resolution720 = new THREE.Mesh(resgeometry720, txtmaterials);
+    this.resolution720.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
+    this.resolution720.position.y = -1;
+    this.resolution720.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
+    this.resolution720.rotation.set(0,3*Math.PI/4,0);
+    this.resolution720.visible = false;
+    this.resolution720.scale.set(0.7,0.7,0.7);
+
+    this.resolution1080 = new THREE.Mesh(resgeometry1080, txtmaterials);
+    this.resolution1080.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
+    this.resolution1080.position.y = -1;
+    this.resolution1080.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
+    this.resolution1080.rotation.set(0,3*Math.PI/4,0);
+    this.resolution1080.visible = false;
+    this.resolution1080.scale.set(0.7,0.7,0.7);
+
+    this.resolution360.on('click', this.handleQualityMenu);
+    this.resolution720.on('click', this.handleQualityMenu);
+    this.resolution1080.on('click', this.handleQualityMenu);
+
+    this.group.add(this.resolution360);
+    this.group.add(this.resolution720);
+    this.group.add(this.resolution1080);
+
     let arrowlength = 1.2;
     let arrowbase = 0.2;
     let noselength = 0.5;
@@ -417,10 +495,10 @@ class Video extends Component {
     this.arrowgeometry = new THREE.ExtrudeGeometry( arrowshape, extrudeSettings );
     this.arrow = new THREE.Mesh(this.arrowgeometry, buttonmaterial);
     this.arrow.scale.set(0.25,0.25,0.25);
-    this.arrow.rotation.set(0,Math.PI/2,-3 *Math.PI/4);
+    this.arrow.rotation.set(0,Math.PI/2- Math.PI/4,-3 *Math.PI/4);
     this.downarrow = new THREE.Mesh(this.arrowgeometry, buttonmaterial);
     this.downarrow.scale.set(0.25,0.25,0.25);
-    this.downarrow.rotation.set(0,Math.PI/2,Math.PI/4);
+    this.downarrow.rotation.set(0,Math.PI/2 - Math.PI/4,Math.PI/4);
 
     this.fullscreenbutton = new THREE.Group();
     this.fullscreenbutton.add(this.arrow);
@@ -472,6 +550,7 @@ class Video extends Component {
     this.mount.appendChild(this.renderer.domElement)
 
     const interaction = new Interaction(this.renderer, this.scene, this.camera);
+    console.log(interaction);
 
     this.controls = new CameraControls( this.camera, this.renderer.domElement );
     this.controls.enableDamping = true;
@@ -519,7 +598,7 @@ class Video extends Component {
     });
     this.group.rotateOnWorldAxis(this.axis, THREE.Math.degToRad(this.angle));
     const delta = this.clock.getDelta();
-    const hasControlsUpdated = this.controls.update( delta );
+    this.controls.update( delta );
     TWEEN.update();
     this.renderer.render( this.scene, this.camera );
    }
