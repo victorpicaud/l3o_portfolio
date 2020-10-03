@@ -444,10 +444,10 @@ class Spectrum extends Component {
 
     this.scene.add(this.group);
 
-    this.geometry = new THREE.IcosahedronGeometry(1, 3);
+    this.geometry = new THREE.IcosahedronGeometry(1, 4);
     const material = new THREE.MeshLambertMaterial({
         color: 0x0433FF,
-        wireframe: true
+        wireframe: true,
     });
 
     const count = 10;
