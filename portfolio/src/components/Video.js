@@ -26,7 +26,8 @@ class Video extends Component {
       width: 400,
       focusing: false,
       duration: 0,
-      quality: 1080
+      quality: 360,
+      isChoosingQuality: false,
     }
   }
 
@@ -88,16 +89,16 @@ class Video extends Component {
     return(i * 360);
   }
 
-  loadVideo = (id, play, quality) => {
+  loadVideo = (id, play) => {
     this.txtmesh.geometry = this.musicgeo[id];
     this.descmesh.geometry = this.genregeo[id];
 
     this.video.pause();
-    if (quality === 360) {
+    if (this.state.quality === 360) {
         this.video.src = this.videorefs360[id];
-    } else if (quality === 720) {
+    } else if (this.state.quality === 720) {
         this.video.src = this.videorefs720[id];
-    } else if (quality === 1080) {
+    } else if (this.state.quality === 1080) {
         this.video.src = this.videorefs1080[id];
     }
     this.video.load();
@@ -153,7 +154,7 @@ class Video extends Component {
     this.controls.maxPolarAngle = Math.PI/2 + Math.PI/4;
     this.controls.rotateTo(THREE.Math.degToRad(decay + modular), Math.PI/2 + Math.PI/64, true);
     this.controls.damplingFactor = 0.05;
-    this.loadVideo(id, true, 360);
+    this.loadVideo(id, true);
     this.showButtonForTarget(event.data.target);
     this.objects.forEach( (object) => {
       this.scaleDownMesh(object,true);
@@ -167,11 +168,53 @@ class Video extends Component {
   }
 
   handleQualityMenu = (event) => {
-    this.resolution360.visible = true;
-    this.resolution720.visible = true;
-    this.resolution720.position.y = -0.8;
-    this.resolution1080.visible = true;
-    this.resolution1080.position.y = -0.6;
+    if (this.state.isChoosingQuality === false) {
+      this.resolution360.visible = true;
+      this.resolution720.visible = true;
+      this.resolution720.position.y = -0.8;
+      this.resolutioncaster720.position.y = -0.8;
+      this.resolution1080.visible = true;
+      this.resolution1080.position.y = -0.6;
+      this.resolutioncaster1080.position.y = -0.6;
+      this.setState({isChoosingQuality: true});
+    } else {
+      if(event.data.target.id === this.resolutioncaster360.id) {
+        this.resolution720.visible = false;
+        this.resolution720.position.y = -1;
+        this.resolutioncaster720.position.y = -1;
+        this.resolution1080.visible = false;
+        this.resolution1080.position.y = -1;
+        this.resolutioncaster1080.position.y = -1;
+
+        this.setState({quality: 360, isChoosingQuality: false});
+        this.loadVideo(this.videoid, true);
+      } else if (event.data.target.id === this.resolutioncaster720.id ) {
+        this.resolution360.visible = false;
+        this.resolution720.position.y = -1;
+        this.resolutioncaster720.position.y = -1;
+        this.resolution1080.visible = false;
+        this.resolution1080.position.y = -1;
+        this.resolutioncaster1080.position.y = -1;
+
+        this.setState({quality: 720, isChoosingQuality: false});
+        this.loadVideo(this.videoid, true);
+      } else if (event.data.target.id === this.resolutioncaster1080.id) {
+
+        this.resolution360.visible = false;
+        this.resolution720.position.y = -1;
+        this.resolutioncaster720.position.y = -1;
+        this.resolution720.visible = false;
+        this.resolution1080.position.y = -1;
+        this.resolutioncaster1080.position.y = -1;
+        if (this.videoid !== 3) {
+          this.setState({quality: 1080, isChoosingQuality: false});
+        } else {
+          this.setState({quality: 720, isChoosingQuality: false});
+        }
+        this.loadVideo(this.videoid, true);
+      }
+    }
+
   }
 
   handleFocus = ( event ) => {
@@ -300,17 +343,18 @@ class Video extends Component {
 
     let pbgeometry = new THREE.CylinderGeometry( 0.5, 0.5, 0.1, 3 );
     let bargeometry = new THREE.BoxGeometry(1,0.1,0.3);
-    let castergrometry = new THREE.BoxGeometry(1,0.1, 0.9);
+    let castergrometry = new THREE.BoxGeometry(0.5,0.1, 0.8);
+    let rescastergeometry = new THREE.BoxGeometry(0.6,0.2,0.7);
 
     let buttonmaterial = new THREE.MeshBasicMaterial( {color: 0x0000000} );
     let castermaterial = new THREE.MeshLambertMaterial({
         transparent: true,
-        opacity: 0
+        opacity: 0,
     });
 
     this.playbutton = new THREE.Mesh(pbgeometry, buttonmaterial);
-    this.playbutton.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
-    this.playbutton.position.y = 1;
+    this.playbutton.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.6;
+    this.playbutton.position.y = 0.95;
     this.playbutton.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
     this.playbutton.rotation.set(Math.PI,0,Math.PI/2);
     this.playbutton.scale.set(0.5,0.5,0.5);
@@ -459,13 +503,37 @@ class Video extends Component {
     this.resolution1080.visible = false;
     this.resolution1080.scale.set(0.7,0.7,0.7);
 
-    this.resolution360.on('click', this.handleQualityMenu);
-    this.resolution720.on('click', this.handleQualityMenu);
-    this.resolution1080.on('click', this.handleQualityMenu);
+    this.resolutioncaster360 = new THREE.Mesh(rescastergeometry, castermaterial);
+    this.resolutioncaster360.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
+    this.resolutioncaster360.position.y = -1;
+    this.resolutioncaster360.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
+    this.resolutioncaster360.rotation.set(0,3*Math.PI/4,0);
+    this.resolutioncaster360.scale.set(0.7,0.7,0.7);
+
+    this.resolutioncaster720 = new THREE.Mesh(rescastergeometry, castermaterial);
+    this.resolutioncaster720.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
+    this.resolutioncaster720.position.y = -1;
+    this.resolutioncaster720.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
+    this.resolutioncaster720.rotation.set(0,3*Math.PI/4,0);
+    this.resolutioncaster720.scale.set(0.7,0.7,0.7);
+
+    this.resolutioncaster1080 = new THREE.Mesh(rescastergeometry, castermaterial);
+    this.resolutioncaster1080.position.x = Math.cos( 0 ) * 4 * this.rscale + 0.5;
+    this.resolutioncaster1080.position.y = -1;
+    this.resolutioncaster1080.position.z = Math.sin( 0 ) * 4 * this.rscale + 2;
+    this.resolutioncaster1080.rotation.set(0,3*Math.PI/4,0);
+    this.resolutioncaster1080.scale.set(0.7,0.7,0.7);
+
+    this.resolutioncaster360.on('click', this.handleQualityMenu);
+    this.resolutioncaster720.on('click', this.handleQualityMenu);
+    this.resolutioncaster1080.on('click', this.handleQualityMenu);
 
     this.group.add(this.resolution360);
     this.group.add(this.resolution720);
     this.group.add(this.resolution1080);
+    this.group.add(this.resolutioncaster360);
+    this.group.add(this.resolutioncaster720);
+    this.group.add(this.resolutioncaster1080);
 
     let arrowlength = 1.2;
     let arrowbase = 0.2;
