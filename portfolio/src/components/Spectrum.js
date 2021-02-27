@@ -139,7 +139,7 @@ class Spectrum extends Component {
     this.descmesh.geometry = this.genregeo[id];
 
     this.htmlaudio.pause();
-    this.htmlaudio.src = this.soundrefs[id];
+    this.source.src = this.soundrefs[id];
     this.htmlaudio.load();
     if (play) {
       this.htmlaudio.play(); this.isPlaying = true;
@@ -316,7 +316,7 @@ class Spectrum extends Component {
 
     this.sound = new THREE.Audio( this.listener );
 
-    this.htmlaudio = new Audio(S1);
+    // this.htmlaudio = new Audio(S1);
     this.sound.setMediaElementSource( this.htmlaudio );
 
     this.audioLoader = new THREE.AudioLoader();
@@ -538,10 +538,15 @@ class Spectrum extends Component {
 
   render () {
     return(
+      <>
+        <audio ref={(audio) => { this.htmlaudio = audio }} style={{display: "none" }}  >
+        <source src={S1} ref={(source) => { this.source = source }} type="audio/wav"/>
+        </audio>
         <div
           style={{width: "100%", height: "100%"}}
           ref={(mount) => { this.mount = mount }}
           />
+      </>
     );
   }
 }

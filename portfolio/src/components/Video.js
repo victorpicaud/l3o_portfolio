@@ -95,11 +95,11 @@ class Video extends Component {
 
     this.video.pause();
     if (this.state.quality === 360) {
-        this.video.src = this.videorefs360[id];
+        this.source.src = this.videorefs360[id];
     } else if (this.state.quality === 720) {
-        this.video.src = this.videorefs720[id];
+        this.source.src = this.videorefs720[id];
     } else if (this.state.quality === 1080) {
-        this.video.src = this.videorefs1080[id];
+        this.source.src = this.videorefs1080[id];
     }
     this.video.load();
     if (play) {
@@ -308,6 +308,15 @@ class Video extends Component {
 
   scaleDownMeshEvent = ( event ) => {
     this.scaleDownMesh(event.data.target,true);
+  }
+
+  logLoaded = () => {
+
+    try {
+      var loadedPercentage = this.video.buffered.end(0) / this.video.duration;
+      console.log(loadedPercentage);
+    } catch {
+    }
   }
 
   componentDidMount(){
@@ -638,6 +647,9 @@ class Video extends Component {
     this.start();
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
+
+    this.video.addEventListener('progress', this.logLoaded);
+
     console.log(this.group);
   }
   componentWillUnmount(){
@@ -673,15 +685,15 @@ class Video extends Component {
 
   render () {
     return(
-      <div>
-        <video ref={(video) => { this.video = video }} crossOrigin="anonymous" style={{display: "none" }}  >
-        <source src={BIO720} type="video/mp4"/>
+      <>
+        <video ref={(video) => { this.video = video }} style={{display: "none" }}  >
+        <source src={BIO720} ref={(source) => { this.source = source }} type="video/mp4"/>
         </video>
         <div
           style={{width: "100%", height: "100%"}}
           ref={(mount) => { this.mount = mount }}
           />
-      </div>
+      </>
     );
   }
 }

@@ -9,7 +9,7 @@ portfolio/node_modules
 /coverage
 
 # production
-/build
+portfolio/build
 
 # misc
 .DS_Store
