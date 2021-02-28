@@ -134,13 +134,13 @@ class Spectrum extends Component {
   textFocusCam = ( event  ) => {
   }
 
-  loadSound = (id, play) => {
+  async loadSound(id, play) {
     this.txtmesh.geometry = this.musicgeo[id];
     this.descmesh.geometry = this.genregeo[id];
 
     this.htmlaudio.pause();
     this.source.src = this.soundrefs[id];
-    this.htmlaudio.load();
+    await this.htmlaudio.load();
     if (play) {
       this.htmlaudio.play(); this.isPlaying = true;
     }

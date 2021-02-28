@@ -4,6 +4,7 @@ import { Interaction } from 'three.interaction';
 import CameraControls from 'camera-controls';
 import TWEEN from '@tweenjs/tween.js';
 import SOLVIC from 'three/examples/fonts/helvetiker_regular.typeface.json';
+import { OBJLoader } from  'three/examples/jsm/loaders/OBJLoader.js';
 
 import BIO360 from '../assets/video/biomutant/biomutant360.mp4';
 import BIO720 from '../assets/video/biomutant/biomutant720.mp4';
@@ -13,6 +14,7 @@ import HOZ720 from '../assets/video/horizon/horizon720.mp4';
 import HOZ1080 from '../assets/video/horizon/horizon1080.mp4';
 import OUT360 from '../assets/video/outlast/outlast360.mp4';
 import OUT720 from '../assets/video/outlast/outlast720.mp4';
+import OBJ from '../assets/obj/player.obj';
 
 CameraControls.install( { THREE: THREE } );
 
@@ -89,7 +91,7 @@ class Video extends Component {
     return(i * 360);
   }
 
-  loadVideo = (id, play) => {
+  async loadVideo(id, play) {
     this.txtmesh.geometry = this.musicgeo[id];
     this.descmesh.geometry = this.genregeo[id];
 
@@ -101,7 +103,7 @@ class Video extends Component {
     } else if (this.state.quality === 1080) {
         this.source.src = this.videorefs1080[id];
     }
-    this.video.load();
+    await this.video.load();
     if (play) {
       this.video.play();
     }
@@ -122,15 +124,13 @@ class Video extends Component {
     this.playbutton.visible = false;
     this.closebutton.visible = true;
     this.txtmesh.visible = true;
-    this.descmesh.visible = true;
+    this.descmesh.visible = false;
     this.fullscreenbutton.visible = true;
     this.resolution360.visible = true;
   }
 
   handleMeshClick = ( event ) => {
     this.txtmesh.rotation.set(0,Math.PI/2,0);
-    this.descmesh.rotation.set(0,Math.PI/2,0);
-    this.descmesh.position.y *= -1.2;
     this.group.position.set(0,this.offsety,0);
     this.group.position.y = 0;
     this.isLocked = true;
@@ -255,7 +255,7 @@ class Video extends Component {
     this.txtmesh.lookAt(this.camera.position);
 
     this.descmesh.geometry = this.genregeo[id];
-    this.descmesh.visible = true;
+    this.descmesh.visible = false;
     this.descmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
     this.descmesh.position.y = 1.2;
     this.descmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
@@ -319,12 +319,28 @@ class Video extends Component {
     }
   }
 
+  mapObj = (object) => {
+    let x = -0.65;
+    //object.scale.set(10,10,10);
+    object.position.x = Math.cos( 0 ) * 4 * this.rscale - x * Math.sin( 0 );
+    object.position.y = -2.5;
+    object.position.z = Math.sin( 0 ) * 4 * this.rscale + x * Math.cos( 0 );
+    object.rotation.set(0,Math.PI/2,0);
+
+    //object.children[1].visible = false;
+    this.object = object;
+    this.group.add( this.object );
+    console.log('here');
+    console.log(this.object);
+  }
+
   componentDidMount(){
     this.axis = new THREE.Vector3(0,1,0);
     let videotitles = ["Biomutant","Horizon","Outlast"];
     let videogenre = ['ca marche super!','ca marche super!','ca marche super!']
     this.txtrotsv = null;
     this.timeoutId = null;
+    this.objmesh = null;
     this.isPlaying = false;
     this.videoid = 0;
     this.angle = 0;
@@ -338,6 +354,11 @@ class Video extends Component {
     this.tweend = [null,null,null];
     this.isLocked = false;
     this.rscale = 1;
+
+    this.objloader = new OBJLoader();
+
+
+
 
     this.clock = new THREE.Clock();
     this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.01, 20 );
@@ -595,6 +616,20 @@ class Video extends Component {
     this.geometry = new THREE.BoxGeometry( 1280/720 * scalen, 1 * scalen, 1 * scalen );
     this.geometrybig = new THREE.BoxGeometry( 1280/720 * scaleg, 1 * scaleg, 1 * scaleg );
 
+    this.objloader.load(
+    // resource URL
+    OBJ,
+    // called when resource is loaded
+    (object) => {this.mapObj(object)},
+    // called when loading is in progresses
+    function ( xhr ) {
+      console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    },
+    // called when loading has errors
+    function ( error ) {
+      console.log( error );
+    }
+    );
 
     this.videotexture = new THREE.VideoTexture(this.video);
     this.videotexture.minFilter = THREE.LinearFilter;
