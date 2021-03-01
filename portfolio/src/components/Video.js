@@ -49,6 +49,7 @@ class Video extends Component {
     this.resolution360.visible = false;
     this.resolution720.visible = false;
     this.resolution1080.visible = false;
+    this.object.visible = false;
 
     this.fullscreenbutton.visible = false;
     this.controls.zoomTo( 1, true );
@@ -127,6 +128,7 @@ class Video extends Component {
     this.descmesh.visible = false;
     this.fullscreenbutton.visible = true;
     this.resolution360.visible = true;
+    this.object.visible = true;
   }
 
   handleMeshClick = ( event ) => {
@@ -268,6 +270,7 @@ class Video extends Component {
     if (this.isLocked === false) {
       this.txtmesh.visible = false;
       this.descmesh.visible = false;
+      this.object.visible = false;
     }
   }
 
@@ -320,6 +323,7 @@ class Video extends Component {
   }
 
   mapObj = (object) => {
+    console.log(object);
     let x = -0.65;
     //object.scale.set(10,10,10);
     object.position.x = Math.cos( 0 ) * 4 * this.rscale - x * Math.sin( 0 );
@@ -327,8 +331,22 @@ class Video extends Component {
     object.position.z = Math.sin( 0 ) * 4 * this.rscale + x * Math.cos( 0 );
     object.rotation.set(0,Math.PI/2,0);
 
-    //object.children[1].visible = false;
-    this.object = object;
+    this.object = object.clone(true);
+    //this.object.children[0].visible = false; //play button
+
+
+
+    //this.object.children[1].visible = false; //pause button
+
+
+    //this.object.children[2].visible = false; //fast forward buttons
+
+
+    //this.object.children[3].visible = false; //stop button
+
+
+
+    this.object.visible = false;
     this.group.add( this.object );
     console.log('here');
     console.log(this.object);
@@ -620,7 +638,7 @@ class Video extends Component {
     // resource URL
     OBJ,
     // called when resource is loaded
-    (object) => {this.mapObj(object)},
+    (object) => {console.log(object.children);this.mapObj(object)},
     // called when loading is in progresses
     function ( xhr ) {
       console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
