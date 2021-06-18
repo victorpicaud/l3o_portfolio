@@ -13,6 +13,7 @@ import S7 from '../assets/sounds/7.wav';
 import S8 from '../assets/sounds/8.wav';
 import S9 from '../assets/sounds/9.wav';
 import S10 from '../assets/sounds/10.wav';
+import PLAYEROBJ from '../assets/obj/player.obj'
 import SOLVIC from 'three/examples/fonts/helvetiker_regular.typeface.json';
 import SimplexNoise from 'simplex-noise';
 import Dat from 'dat.gui';
@@ -76,7 +77,7 @@ class Spectrum extends Component {
   }
 
   makeRoughBall = (mesh, bassFr, treFr, reset) => {
-    mesh.geometry.vertices.forEach((vertex, i) => {
+     mesh.geometry.vertices.forEach((vertex, i) => {
         var offset = 0.5;
         var amp = this.amp;
         var time = window.performance.now();
@@ -113,6 +114,7 @@ class Spectrum extends Component {
       object.on('click', this.handleMeshClick);
       object.on('mouseover', this.handleFocus);
       object.on('mouseout', this.scaleDownMeshEvent);
+      object.visible = true;
     });
     this.unlockControls();
     this.isLocked = false;
@@ -131,7 +133,8 @@ class Spectrum extends Component {
       this.isPlaying = !this.htmlaudio.paused;
   }
 
-  textFocusCam = ( event  ) => {
+  textFocusCam = ( event ) => {
+    this.timeoutId = window.setTimeout(this.hideText, 1000);
   }
 
   loadSound = (id, play) => {
@@ -157,6 +160,7 @@ class Spectrum extends Component {
   }
 
   handleMeshClick = ( event ) => {
+    this.audiocontext.resume()
     this.txtmesh.rotation.set(0,Math.PI/2,0);
     this.descmesh.rotation.set(0,Math.PI/2,0);
     this.descmesh.position.y *= -1.2;
@@ -190,6 +194,9 @@ class Spectrum extends Component {
       object.off('mouseover', this.handleFocus);
       object.off('mouseout', this.scaleDownMeshEvent);
       object.scale.set(1,1,1);
+      if(object.id !== event.data.target.id) {
+        object.visible = false;
+      }
     });
     this.controls.zoomTo( 1.2, true );
     this.lockControls();
@@ -230,14 +237,12 @@ class Spectrum extends Component {
     this.txtmesh.position.y = 2;
     this.txtmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
     this.group.setRotationFromAxisAngle(this.axis, 0);
-    this.txtmesh.lookAt(this.camera.position);
 
     this.descmesh.geometry = this.genregeo[id];
     this.descmesh.visible = true;
     this.descmesh.position.x = Math.cos( 0 ) * 4 * this.rscale;
     this.descmesh.position.y = 1.5;
     this.descmesh.position.z = Math.sin( 0 ) * 4 * this.rscale;
-    this.descmesh.lookAt(this.camera.position);
 
     this.group.position.set(-Math.cos( 0 ) * 4 * this.rscale,2,-Math.sin( 0 ) * 4 * this.rscale);
 
@@ -276,6 +281,67 @@ class Spectrum extends Component {
   scaleDownMeshEvent = ( event ) => {
     this.scaleDownMesh(event.data.target,true);
   }
+
+  rotateEvent = ( event ) => {
+    if (this.controls.enabled) {
+      if (event.code === "ArrowRight") {
+        this.rotateRight();
+      } else if (event.code === "ArrowLeft") {
+        this.rotateLeft();
+      }
+    }
+  }
+
+  getAllDistances = () => {
+    for (let obj in this.objects) {
+      console.log(this.objects[obj].position.distanceTo(this.camera.position))
+    }
+  }
+
+  rotateRight = () => {
+    this.getAllDistances();
+    let angleTo = 360/this.objects.length
+  	// save the start angle
+  	let startAzimuthAngle = this.controls.azimuthAngle;
+  	new TWEEN.Tween( this.controls )
+  		.to( { azimuthAngle: angleTo * THREE.MathUtils.DEG2RAD + startAzimuthAngle }, 1000 )
+  		.easing( TWEEN.Easing.Quadratic.In )
+  		.onStart( () => {
+        this.txtmesh.visible =  true;
+
+  			// disable user control while the animation
+  			this.lockControls();
+  		} )
+  		.onComplete( () => {
+
+  			this.unlockControls();
+
+  		} )
+  		.start();
+  }
+
+  rotateLeft = () => {
+    let angleTo = -360/this.objects.length
+  	// save the start angle
+  	let startAzimuthAngle = this.controls.azimuthAngle;
+  	new TWEEN.Tween( this.controls )
+  		.to( { azimuthAngle: angleTo * THREE.MathUtils.DEG2RAD + startAzimuthAngle }, 1000 )
+  		.easing( TWEEN.Easing.Quadratic.In )
+  		.onStart( () => {
+        this.txtmesh.visible = true;
+
+  			// disable user control while the animation
+  			this.lockControls();
+  		} )
+  		.onComplete( () => {
+
+  			this.unlockControls();
+
+  		} )
+  		.start();
+  }
+
+
 
   componentDidMount(){
     this.txtrotsv = null;
@@ -320,6 +386,10 @@ class Spectrum extends Component {
     this.sound.setMediaElementSource( this.htmlaudio );
 
     this.audioLoader = new THREE.AudioLoader();
+
+    this.audiocontext = THREE.AudioContext.getContext();
+
+
 
     this.analyser = new THREE.AudioAnalyser( this.sound, 32 );
 
@@ -442,11 +512,12 @@ class Spectrum extends Component {
 
     this.scene.add(this.group);
 
-    this.geometry = new THREE.IcosahedronGeometry(1, 4);
+    this.geometry = new THREE.IcosahedronGeometry(1, 6);
     const material = new THREE.MeshLambertMaterial({
         color: 0x0433FF,
         wireframe: true,
     });
+
 
     const count = 10;
 
@@ -476,8 +547,6 @@ class Spectrum extends Component {
 
     const interaction = new Interaction(this.renderer, this.scene, this.camera);
 
-    console.log(interaction);
-
     this.controls = new CameraControls( this.camera, this.renderer.domElement );
     this.controls.enableDamping = true;
     this.controls.dollySpeed = 0;
@@ -489,11 +558,13 @@ class Spectrum extends Component {
     this.controls.mouseButtons.right = CameraControls.ACTION.NONE;
     this.controls.addEventListener( 'sleep', this.textFocusCam );
 
+    console.log(this.objects[0])
 
 
     this.start();
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
+    window.addEventListener('keydown', this.rotateEvent);
   }
   componentWillUnmount(){
       this.stop();
@@ -522,13 +593,15 @@ class Spectrum extends Component {
 
       var lowerMaxFr = lowerMax / lowerHalfArray.length;
       var upperAvgFr = upperAvg / upperHalfArray.length;
-
       this.makeRoughBall(this.objects[this.soundid], this.modulate(Math.pow(lowerMaxFr, 0.8), 0, 1, 0, 8), this.modulate(upperAvgFr, 0, 1, 0, 4), false);
     } else {
       this.makeRoughBall(this.objects[this.soundid], 0, 0, true);
     }
     this.group.rotateOnWorldAxis(this.axis, THREE.Math.degToRad(this.angle));
     window.requestAnimationFrame( this.animate );
+
+    this.descmesh.lookAt(this.camera.position)
+    this.txtmesh.lookAt(this.camera.position)
 
     const delta = this.clock.getDelta();
     this.controls.update( delta );
