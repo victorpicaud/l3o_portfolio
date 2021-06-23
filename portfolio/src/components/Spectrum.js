@@ -17,6 +17,7 @@ import PLAYEROBJ from '../assets/obj/player.obj'
 import SOLVIC from 'three/examples/fonts/helvetiker_regular.typeface.json';
 import SimplexNoise from 'simplex-noise';
 import Dat from 'dat.gui';
+import {TransformControls} from "./TransformControls";
 
 CameraControls.install( { THREE: THREE } );
 
@@ -79,15 +80,15 @@ class Spectrum extends Component {
   makeRoughBall = (mesh, bassFr, treFr, reset) => {
      mesh.geometry.vertices.forEach((vertex, i) => {
         var offset = 0.5;
-        var amp = this.amp;
+        var amp = this.amp * 5.6;
         var time = window.performance.now();
         vertex.normalize();
         var rf = this.rf;
-        var distance = (offset + bassFr ) + this.noise.noise3D(vertex.x + time *rf*7, vertex.y +  time*rf*8, vertex.z + time*rf*9) * amp * treFr;
+        var distance = (offset + bassFr * amp ) + this.noise.noise3D(vertex.x + time *rf*7, vertex.y +  time*rf*8, vertex.z + time*rf*9) * 10 * treFr;
         if (reset) {
           vertex.multiplyScalar(1);
         } else {
-          vertex.multiplyScalar(distance/100);
+          vertex.multiplyScalar(distance/1700);
         }
     });
     mesh.geometry.verticesNeedUpdate = true;
@@ -118,6 +119,7 @@ class Spectrum extends Component {
     });
     this.unlockControls();
     this.isLocked = false;
+    this.spherecontrols.detach();
   }
 
   handlePlayClick = () => {
@@ -193,13 +195,16 @@ class Spectrum extends Component {
       object.off('click', this.handleMeshClick);
       object.off('mouseover', this.handleFocus);
       object.off('mouseout', this.scaleDownMeshEvent);
-      object.scale.set(1,1,1);
+      object.scale.set(0.5,0.5,0.5);
       if(object.id !== event.data.target.id) {
         object.visible = false;
+      } else {
+        this.spherecontrols.attach( object );
       }
     });
     this.controls.zoomTo( 1.2, true );
     this.lockControls();
+    this.spherecontrols.enabled = true;
   }
 
   handleFocus = ( event ) => {
@@ -558,6 +563,12 @@ class Spectrum extends Component {
     this.controls.mouseButtons.right = CameraControls.ACTION.NONE;
     this.controls.addEventListener( 'sleep', this.textFocusCam );
 
+    this.spherecontrols = new TransformControls( this.camera, this.renderer.domElement );
+    this.spherecontrols.setMode( "rotate" );
+    this.spherecontrols.enabled = false;
+    this.spherecontrols.space = "local";
+    this.scene.add( this.spherecontrols );
+
     console.log(this.objects[0])
 
 
@@ -585,8 +596,8 @@ class Spectrum extends Component {
     if (this.isPlaying) {
       let dataArray = this.analyser.getFrequencyData();
 
-      var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
-      var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
+      var lowerHalfArray = dataArray.slice(0, (dataArray.length/5) - 1);
+      var upperHalfArray = dataArray.slice((dataArray.length/5) - 1, dataArray.length - 1);
 
       var lowerMax = this.max(lowerHalfArray);
       var upperAvg = this.avg(upperHalfArray);
