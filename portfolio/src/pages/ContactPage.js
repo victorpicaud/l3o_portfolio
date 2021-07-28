@@ -9,10 +9,13 @@ function ContactPage(props) {
 
   return (
     <div>
-      <Hero title={props.title}/>
+      <Hero title={props.title} text={props.text}/>
       <Content>
         <ContactForm/>
       </Content>
+      <Hero subTitle={props.contacttitle} text={`Léo Lemberger
+        12 Rue des fossés St Marcel Paris, Île de France 75005 France lemberger.leo.istds@gmail.com
+        (+33)777004419`} />
     </div>
   );
 }

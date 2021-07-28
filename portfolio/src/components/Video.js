@@ -52,6 +52,7 @@ class Video extends Component {
     this.controls.zoomTo( 1, true );
     this.controls.rotate(0, -Math.PI/2, true);
     this.objects.forEach( (object) => {
+      object.position.y = 1
       object.on('click', this.handleMeshClick);
       object.on('mouseover', this.handleFocus);
       object.on('mouseout', this.scaleDownMeshEvent);
@@ -162,6 +163,7 @@ class Video extends Component {
       object.off('mouseover', this.handleFocus);
       object.off('mouseout', this.scaleDownMeshEvent);
       object.scale.set(1,1,1);
+      object.position.y = 0;
     });
     this.controls.zoomTo( 1.2, true );
     this.lockControls();
@@ -272,6 +274,7 @@ class Video extends Component {
   }
 
   openFullscreen = () => {
+  this.fullscreen = null;
   if (this.video.requestFullscreen) {
     this.video.requestFullscreen();
   } else if (this.video.mozRequestFullScreen) {
@@ -338,7 +341,7 @@ class Video extends Component {
     this.tweend = [null,null,null];
     this.isLocked = false;
     this.rscale = 1;
-
+    this.fullscreen = {display: "none" }
     this.clock = new THREE.Clock();
     this.camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.01, 20 );
     this.camera.position.set( 0, 3, 6);
@@ -590,7 +593,7 @@ class Video extends Component {
 
     this.scene.add(this.group);
 
-    let scalen = 1.2;
+    let scalen = 1.1;
     let scaleg = 1.4;
     this.geometry = new THREE.BoxGeometry( 1280/720 * scalen, 1 * scalen, 1 * scalen );
     this.geometrybig = new THREE.BoxGeometry( 1280/720 * scaleg, 1 * scaleg, 1 * scaleg );
@@ -614,6 +617,7 @@ class Video extends Component {
 
       mesh.name = t;
       mesh.position.x = Math.cos( t ) * 4;
+      mesh.position.y = 1;
       mesh.position.z = Math.sin( t ) * 4;
       mesh.on('click', this.handleMeshClick);
       mesh.on('mouseover', this.handleFocus);
@@ -686,11 +690,11 @@ class Video extends Component {
   render () {
     return(
       <>
-        <video ref={(video) => { this.video = video }} style={{display: "none" }}  >
+        <video ref={(video) => { this.video = video }} style={{height: 0, width: 0}} controlslist="nodownload"  >
         <source src={BIO720} ref={(source) => { this.source = source }} type="video/mp4"/>
         </video>
         <div
-          style={{width: "100%", height: "100%"}}
+          style={{height: "90vh"}}
           ref={(mount) => { this.mount = mount }}
           />
       </>

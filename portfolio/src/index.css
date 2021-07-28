@@ -5,6 +5,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+  overflow: hidden;
 }
 
 code {
@@ -50,7 +52,8 @@ code {
 }
 
 .no-border {
-  background-color: #ffffff;
+  opacity: 0;
+  background-color: #000000;
 }
 
 :focus {

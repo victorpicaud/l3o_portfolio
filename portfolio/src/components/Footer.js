@@ -6,7 +6,7 @@ import Col from 'react-bootstrap/Col';
 function Footer() {
 
   return(
-    <footer className="mt-5">
+    <footer className="mt-5" style={{position: "absolute", left:0, bottom:0, right:0, zIndex: 10000}}>
       <Container fluid={true}>
         <Row className="border-top jsutify-content-between p-3">
             <Col className="p-0" md={3} sm={12}>
