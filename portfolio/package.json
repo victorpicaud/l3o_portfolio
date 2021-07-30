@@ -21,6 +21,7 @@
     "react-responsive-carousel": "^3.2.9",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
+    "react-spinners-kit": "^1.9.1",
     "react-spring": "^8.0.27",
     "simplex-noise": "^2.4.0",
     "three": "^0.124.0",
