@@ -4,6 +4,7 @@ import Carousel from 'react-bootstrap/Carousel'
 import Spectrum from '../components/Spectrum';
 import Video from '../components/Video';
 import Content from '../components/Content';
+import Fbx from '../components/Fbx';
 import Nav from 'react-bootstrap/Nav'
 import { WaveSpinner } from "react-spinners-kit";
 
@@ -39,7 +40,7 @@ function HomePage(props) {
           Une seule vidéo
         </Content> : null}
       {index === 1 ? <Video fluid={true} /> : null}
-      {index === 2 ? <Video fluid={true} /> : null}
+      {index === 2 ? <Fbx setLoading={setLoading}/> : null}
       {index === 3 ? <Spectrum setLoading={setLoading}/> : null}
     </div>
   );
