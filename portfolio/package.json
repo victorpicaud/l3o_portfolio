@@ -20,7 +20,7 @@
     "react-scripts": "3.4.1",
     "react-spring": "^8.0.27",
     "simplex-noise": "^2.4.0",
-    "three": "^0.124.0",
+    "three": "^0.137.0",
     "three-css3drenderer": "^1.0.1",
     "three-dat.gui": "^2.0.7",
     "three.interaction": "^0.2.3",
